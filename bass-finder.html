@@ -1,0 +1,3297 @@
+<!DOCTYPE html>
+<!-- FishAI build 2026-04-26 12:32 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a3d2b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>FishAI</title>
+<style>
+  :root {
+    --green-dark: #0a3d2b;
+    --green-mid: #0F6E56;
+    --green-bright: #1D9E75;
+    --green-light: #9FE1CB;
+    --green-pale: #E1F5EE;
+    --amber: #EF9F27;
+    --amber-dark: #BA7517;
+    --coral: #D85A30;
+    --coral-dark: #993C1D;
+    --coral-pale: #FAECE7;
+    --gray-900: #1a1a18;
+    --gray-800: #2C2C2A;
+    --gray-700: #444441;
+    --gray-500: #888780;
+    --gray-300: #B4B2A9;
+    --gray-100: #F1EFE8;
+    --gray-50: #F8F7F3;
+    --surface: #ffffff;
+    --bg: #f4f3ee;
+    --text: #1a1a18;
+    --text-muted: #5F5E5A;
+    --border: rgba(0,0,0,0.1);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html { height: 100%; }
+
+  body {
+    font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    /* Safe area bottom for gesture bar + nav height */
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Header */
+  .app-header {
+    background: var(--green-dark);
+    padding: calc(16px + env(safe-area-inset-top)) 20px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .app-header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(29,158,117,0.15);
+  }
+  .app-header::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: 30%;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(29,158,117,0.1);
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .app-title { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+  .app-subtitle { font-size: 13px; color: var(--green-light); margin-top: 2px; }
+  .refresh-btn {
+    background: rgba(255,255,255,0.12);
+    border: none; border-radius: 50%;
+    width: 44px; height: 44px;
+    color: #fff; font-size: 18px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.2s;
+  }
+  .refresh-btn:active { transform: scale(0.92); }
+  .refresh-btn.spinning { animation: spin 0.8s linear infinite; opacity: 0.6; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* Location bar */
+  .loc-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 13px; color: #fff; cursor: pointer;
+    border: none;
+  }
+  .loc-pill span { font-size: 14px; }
+
+  /* Status bar */
+  .status-bar {
+    display: flex; gap: 8px; padding: 14px 16px;
+    overflow-x: auto; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+  .status-bar::-webkit-scrollbar { display: none; }
+  .stat-chip {
+    flex-shrink: 0;
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    text-align: center;
+    min-width: 80px;
+  }
+  .stat-chip .val { font-size: 16px; font-weight: 600; color: var(--text); }
+  .stat-chip .lbl { font-size: 12px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+
+  /* Section */
+  .section { padding: 0 16px; margin-bottom: 20px; }
+  .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .section-title { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+
+  /* Bite timeline card */
+  .bite-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    border: 1px solid var(--border);
+  }
+  .bite-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .bite-label { font-size: 15px; font-weight: 600; color: var(--text); }
+  .bite-badge { font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+  .badge-hot { background: var(--coral-pale); color: var(--coral-dark); }
+  .badge-good { background: var(--green-pale); color: var(--green-mid); }
+  .badge-slow { background: var(--gray-100); color: var(--gray-700); }
+
+  .timeline { display: flex; gap: 6px; margin-bottom: 4px; }
+  .tslot {
+    flex: 1; text-align: center; cursor: pointer;
+    padding: 0;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid transparent;
+    transition: all 0.18s;
+  }
+  .tslot.now { border-color: var(--green-bright); }
+  .tslot-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 500; }
+  .tslot.now .tslot-label { color: var(--green-mid); font-weight: 600; }
+  .bar-wrap { height: 56px; background: var(--gray-50); border-radius: 6px; position: relative; overflow: hidden; margin: 0 2px; }
+  .bar-fill { position: absolute; bottom: 0; left: 0; right: 0; border-radius: 6px 6px 0 0; transition: height 0.5s cubic-bezier(.34,1.56,.64,1); }
+  .bar-hot { background: linear-gradient(to top, var(--coral), #f0836a); }
+  .bar-good { background: linear-gradient(to top, var(--green-bright), #5DCAA5); }
+  .bar-slow { background: linear-gradient(to top, var(--gray-300), #ccc); }
+  .tslot-pct { font-size: 12px; color: var(--text-muted); margin-top: 3px; display: block; }
+
+  /* Lure cards */
+  .lure-scroll {
+    display: flex; gap: 10px; overflow-x: auto;
+    padding: 2px 16px 4px; scrollbar-width: none; margin: 0 -16px;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+  .lure-scroll::-webkit-scrollbar { display: none; }
+  .lure-card {
+    flex-shrink: 0;
+    width: 148px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 14px 12px;
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.12s;
+    scroll-snap-align: start;
+    /* Ensure minimum 44px tap target height */
+    min-height: 44px;
+  }
+  .lure-card:active { transform: scale(0.96); }
+  .lure-card.top-pick { border-color: var(--green-bright); }
+  .lure-icon { font-size: 26px; margin-bottom: 8px; display: block; }
+  .lure-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .lure-desc { font-size: 11px; color: var(--text-muted); line-height: 1.45; }
+  .lure-tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 10px; margin-top: 8px; background: var(--green-pale); color: var(--green-mid); }
+  .lure-tag.tag-hot { background: var(--coral-pale); color: var(--coral-dark); }
+
+  /* Conditions grid */
+  .cond-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cond-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 14px;
+    border: 1px solid var(--border);
+  }
+  .cond-icon { font-size: 20px; margin-bottom: 6px; }
+  .cond-val { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .cond-lbl { font-size: 12px; color: var(--text-muted); }
+  .cond-sub { font-size: 12px; color: var(--green-mid); font-weight: 500; margin-top: 2px; }
+
+  /* Tips */
+  .tip-list { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+  .tip-row { display: flex; align-items: flex-start; gap: 12px; padding: 13px 14px; border-bottom: 1px solid var(--border); }
+  .tip-row:last-child { border-bottom: none; }
+  .tip-ico { font-size: 18px; min-width: 22px; margin-top: 1px; }
+  .tip-body { flex: 1; }
+  .tip-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .tip-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+  /* Catch log */
+  .log-btn {
+    width: 100%; background: var(--green-dark); color: #fff;
+    border: none; border-radius: var(--radius); padding: 15px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: inherit;
+  }
+  .log-btn:active { background: var(--green-mid); }
+  .catch-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .catch-item {
+    background: var(--surface); border-radius: var(--radius-sm);
+    padding: 12px 14px; border: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .catch-info .catch-weight { font-size: 15px; font-weight: 600; color: var(--text); }
+  .catch-info .catch-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .catch-del { background: none; border: none; color: var(--gray-300); font-size: 16px; cursor: pointer; padding: 4px; }
+
+  /* Modal overlay */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 100;
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 20px 20px 0 0;
+    padding: 24px 20px;
+    padding-bottom: calc(32px + env(safe-area-inset-bottom));
+    width: 100%; max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 18px; }
+  .modal label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; margin-top: 14px; }
+  .modal input, .modal select {
+    width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); font-size: 15px; font-family: inherit;
+    background: var(--gray-50); color: var(--text); outline: none;
+  }
+  .modal input:focus, .modal select:focus { border-color: var(--green-bright); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-cancel { flex: 1; padding: 13px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: none; font-size: 15px; font-family: inherit; cursor: pointer; color: var(--text-muted); }
+  .btn-save { flex: 2; padding: 13px; border-radius: var(--radius-sm); border: none; background: var(--green-dark); color: #fff; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; }
+
+  /* Loading state */
+
+
+  /* Splash screen */
+  .splash {
+    position: fixed; inset: 0;
+    background: linear-gradient(160deg, #0a3d2b 0%, #0f5c3f 60%, #1D9E75 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 300;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .splash.hidden {
+    opacity: 0;
+    transform: scale(1.04);
+    pointer-events: none;
+    display: none;
+  }
+  .splash-icon { font-size: 72px; animation: bob 1.4s ease-in-out infinite; margin-bottom: 20px; }
+  .splash-title { font-size: 34px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+  .splash-sub { font-size: 15px; color: #9FE1CB; margin-top: 6px; }
+  .splash-dots { display: flex; gap: 8px; margin-top: 40px; }
+  .splash-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    animation: dotPulse 1.2s ease-in-out infinite;
+  }
+  .splash-dot:nth-child(2) { animation-delay: 0.2s; }
+  .splash-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dotPulse {
+    0%, 80%, 100% { background: rgba(255,255,255,0.3); transform: scale(1); }
+    40% { background: rgba(255,255,255,0.9); transform: scale(1.3); }
+  }
+  .splash-version { position: absolute; bottom: calc(20px + env(safe-area-inset-bottom)); font-size: 11px; color: rgba(255,255,255,0.3); }
+
+  /* Update available banner */
+  .update-banner {
+    position: fixed; bottom: 70px; left: 12px; right: 12px; z-index: 400;
+    background: linear-gradient(135deg, #1a3a8a, #2d5be3);
+    color: #fff; padding: 14px 16px;
+    border-radius: 14px;
+    display: flex; align-items: center; gap: 12px;
+    transform: translateY(120px);
+    transition: transform 0.4s cubic-bezier(.34,1.2,.64,1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .update-banner.show { transform: translateY(0); }
+  .update-banner-icon { font-size: 22px; flex-shrink: 0; }
+  .update-banner-body { flex: 1; }
+  .update-banner-title { font-size: 14px; font-weight: 700; }
+  .update-banner-sub { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+  .update-banner-btn {
+    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 20px; padding: 6px 14px;
+    color: #fff; font-size: 12px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  }
+  .update-banner-close {
+    background: none; border: none; color: rgba(255,255,255,0.6);
+    font-size: 16px; cursor: pointer; flex-shrink: 0; padding: 0 0 0 4px;
+  }
+
+  /* Hot bite notification banner */
+  .bite-alert {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 400;
+    background: linear-gradient(135deg, #D85A30, #EF9F27);
+    color: #fff; padding: calc(env(safe-area-inset-top) + 12px) 16px 14px;
+    display: flex; align-items: center; gap: 12px;
+    transform: translateY(-100%);
+    transition: transform 0.4s cubic-bezier(.34,1.2,.64,1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  }
+  .bite-alert.show { transform: translateY(0); }
+  .bite-alert-icon { font-size: 28px; flex-shrink: 0; }
+  .bite-alert-body { flex: 1; }
+  .bite-alert-title { font-size: 15px; font-weight: 700; }
+  .bite-alert-sub { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+  .bite-alert-close {
+    background: rgba(255,255,255,0.2); border: none; border-radius: 50%;
+    width: 30px; height: 30px; color: #fff; font-size: 14px;
+    cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Error */
+  .error-bar {
+    background: var(--coral-pale); color: var(--coral-dark);
+    padding: 10px 16px; font-size: 13px; display: none;
+    border-bottom: 1px solid rgba(216,90,48,0.2);
+  }
+  .error-bar.show { display: block; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface); border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px 0;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    z-index: 50;
+    /* Side safe areas for notched landscape */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 3px; cursor: pointer; padding: 6px 0;
+    min-height: 44px; justify-content: center;
+  }
+  .nav-ico { font-size: 22px; }
+  .nav-lbl { font-size: 11px; color: var(--text-muted); }
+  .nav-item.active .nav-lbl { color: var(--green-mid); font-weight: 600; }
+  .nav-item.active .nav-ico { filter: none; }
+
+  /* Pages */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Species selector */
+  .species-row { display: flex; gap: 8px; padding: 10px 16px 0; }
+  .species-btn {
+    flex: 1; padding: 9px 6px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--surface);
+    font-size: 12px; font-weight: 600; color: var(--text-muted);
+    cursor: pointer; font-family: inherit; text-align: center;
+    transition: all 0.15s; min-height: 44px;
+  }
+  .species-btn.active { background: var(--green-dark); color: #fff; border-color: var(--green-dark); }
+  .species-btn .sp-icon { font-size: 22px; display: block; margin-bottom: 3px; }
+  .species-btn { min-height: 54px; }
+
+  /* Tab switcher */
+  .tab-row { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tab-btn {
+    flex: 1; padding: 8px 0; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--surface);
+    font-size: 13px; font-weight: 600; color: var(--text-muted);
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+  }
+  .tab-btn.active { background: var(--green-dark); color: #fff; border-color: var(--green-dark); }
+
+  /* Week forecast */
+  .week-list { display: flex; flex-direction: column; gap: 8px; }
+  .day-row {
+    background: var(--surface); border-radius: var(--radius);
+    border: 1px solid var(--border); padding: 13px 14px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; transition: border-color 0.15s;
+  }
+  .day-row:active { border-color: var(--green-bright); }
+  .day-row.today { border-left: 3px solid var(--green-bright); }
+  .day-name { font-size: 14px; font-weight: 600; color: var(--text); min-width: 38px; }
+  .day-icon { font-size: 20px; min-width: 26px; text-align: center; }
+  .day-temps { font-size: 13px; color: var(--text-muted); min-width: 70px; }
+  .day-temps strong { color: var(--text); font-weight: 600; }
+  .day-bite-wrap { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .day-bite-label { font-size: 11px; color: var(--text-muted); }
+  .day-bite-bar { height: 8px; background: var(--gray-100); border-radius: 4px; overflow: hidden; }
+  .day-bite-fill { height: 100%; border-radius: 4px; }
+  .day-badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 10px; white-space: nowrap; }
+
+  /* Expanded day detail */
+  .day-detail {
+    background: var(--gray-50); border-radius: 0 0 var(--radius) var(--radius);
+    padding: 12px 14px; margin-top: -8px;
+    border: 1px solid var(--border); border-top: none;
+    display: none;
+  }
+  .day-detail.open { display: block; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .detail-cell { text-align: center; }
+  .detail-cell .dval { font-size: 14px; font-weight: 600; color: var(--text); }
+  .detail-cell .dlbl { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .day-tip { font-size: 12px; color: var(--text-muted); line-height: 1.5; padding-top: 8px; border-top: 1px solid var(--border); }
+
+  /* Lure detail sheet */
+  .sheet-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 150;
+    align-items: flex-end; justify-content: center;
+  }
+  .sheet-overlay.open { display: flex; }
+  .lure-sheet {
+    background: var(--surface); border-radius: 22px 22px 0 0;
+    width: 100%; max-width: 480px;
+    max-height: 88vh; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    animation: slideUp 0.28s cubic-bezier(.34,1.2,.64,1);
+    transition: transform 0.2s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet-handle { width: 40px; height: 4px; background: var(--gray-300); border-radius: 2px; margin: 14px auto 0; }
+  .sheet-header { padding: 16px 20px 0; display: flex; align-items: center; gap: 14px; }
+  .sheet-icon { font-size: 40px; }
+  .sheet-name { font-size: 20px; font-weight: 700; color: var(--text); }
+  .sheet-tag { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 10px; margin-top: 4px; display: inline-block; }
+  .sheet-body { padding: 16px 20px; }
+  .sheet-section { margin-bottom: 18px; }
+  .sheet-section-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+  .sheet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sheet-cell { background: var(--gray-50); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .sheet-cell-label { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+  .sheet-cell-val { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .sheet-tip { background: var(--green-pale); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: var(--green-mid); line-height: 1.6; margin-bottom: 10px; }
+  .sheet-tip strong { color: var(--green-dark); }
+  .setup-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .setup-row:last-child { border-bottom: none; }
+  .setup-num { width: 22px; height: 22px; border-radius: 50%; background: var(--green-dark); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .setup-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .setup-text strong { font-weight: 600; }
+  .variation-chip { display: inline-block; background: var(--gray-50); border: 1px solid var(--border); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 500; color: var(--text); margin: 4px 4px 0 0; }
+  .sheet-close { width: calc(100% - 40px); margin: 0 20px; padding: 13px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: none; font-size: 15px; font-weight: 600; color: var(--text-muted); font-family: inherit; cursor: pointer; }
+
+  /* Water conditions input panel */
+  .water-panel {
+    background: var(--surface); border-radius: var(--radius);
+    border: 1px solid var(--border); overflow: hidden;
+  }
+  .water-panel-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px; cursor: pointer;
+    border-bottom: 1px solid transparent; transition: border-color 0.15s;
+  }
+  .water-panel-header.open { border-bottom-color: var(--border); }
+  .water-panel-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .water-panel-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .water-panel-arrow { font-size: 16px; color: var(--text-muted); transition: transform 0.2s; }
+  .water-panel-arrow.open { transform: rotate(180deg); }
+  .water-panel-body { display: none; padding: 16px; }
+  .water-panel-body.open { display: block; }
+
+  .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .input-group { display: flex; flex-direction: column; gap: 6px; }
+  .input-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .input-field {
+    padding: 10px 12px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); font-size: 15px;
+    font-family: inherit; background: var(--gray-50); color: var(--text);
+    outline: none; width: 100%;
+  }
+  .input-field:focus { border-color: var(--green-bright); }
+
+  .clarity-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .clarity-btn {
+    flex: 1; padding: 10px 6px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--gray-50);
+    font-size: 12px; font-weight: 600; color: var(--text-muted);
+    cursor: pointer; font-family: inherit; text-align: center;
+    transition: all 0.15s;
+  }
+  .clarity-btn.selected { border-color: var(--green-bright); background: var(--green-pale); color: var(--green-mid); }
+
+  .structure-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .structure-chip {
+    padding: 7px 12px; border-radius: 20px;
+    border: 1.5px solid var(--border); background: var(--gray-50);
+    font-size: 12px; font-weight: 500; color: var(--text-muted);
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+  }
+  .structure-chip.selected { border-color: var(--green-bright); background: var(--green-pale); color: var(--green-mid); }
+
+  .apply-btn {
+    width: 100%; padding: 12px; border-radius: var(--radius-sm);
+    border: none; background: var(--green-dark); color: #fff;
+    font-size: 14px; font-weight: 600; font-family: inherit;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .apply-btn:active { background: var(--green-mid); }
+
+  .conditions-summary {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+  }
+  .cond-pill {
+    font-size: 11px; font-weight: 600; padding: 3px 10px;
+    border-radius: 20px; background: var(--green-pale); color: var(--green-mid);
+  }
+
+  /* Strategy engine */
+  .strategy-card {
+    background: var(--green-dark); border-radius: var(--radius);
+    padding: 18px 16px; color: #fff; position: relative; overflow: hidden;
+  }
+  .strategy-card::before {
+    content: ''; position: absolute; top: -30px; right: -30px;
+    width: 130px; height: 130px; border-radius: 50%;
+    background: rgba(29,158,117,0.2);
+  }
+  .strategy-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .strategy-title { font-size: 15px; font-weight: 700; color: #fff; }
+  .strategy-rating { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 10px; background: rgba(255,255,255,0.15); color: #fff; }
+  .strategy-lure-row { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.1); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 10px; }
+  .strategy-lure-icon { font-size: 28px; }
+  .strategy-lure-name { font-size: 16px; font-weight: 700; color: #fff; }
+  .strategy-lure-sub { font-size: 12px; color: var(--green-light); margin-top: 2px; }
+  .strategy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .strategy-cell { background: rgba(255,255,255,0.08); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .strategy-cell-label { font-size: 10px; color: var(--green-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .strategy-cell-val { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.3; }
+  .strategy-reasoning { font-size: 12px; color: var(--green-light); line-height: 1.6; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.12); }
+  .strategy-alts { margin-top: 12px; }
+  .strategy-alts-title { font-size: 11px; color: var(--green-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .alt-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .alt-row:last-child { border-bottom: none; }
+  .alt-icon { font-size: 18px; min-width: 24px; }
+  .alt-info { flex: 1; }
+  .alt-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .alt-desc { font-size: 11px; color: var(--green-light); margin-top: 1px; }
+  .alt-conf { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 8px; background: rgba(255,255,255,0.12); color: #fff; }
+  .skill-row { display: flex; gap: 6px; margin-top: 14px; }
+  .skill-btn {
+    flex: 1; padding: 9px 4px; border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: var(--green-light); font-size: 12px; font-weight: 600;
+    font-family: inherit; cursor: pointer; text-align: center;
+    transition: all 0.15s;
+  }
+  .skill-btn.active { background: rgba(255,255,255,0.22); color: #fff; border-color: rgba(255,255,255,0.5); }
+  .skill-btn:active { transform: scale(0.96); }
+  .skill-label { font-size: 10px; color: var(--green-light); text-align: center; margin-top: 5px; letter-spacing: 0.3px; }
+
+  /* Map page */
+  #map { width: 100%; height: calc(100vh - 200px); min-height: 300px; border-radius: var(--radius); overflow: hidden; }
+  .map-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px; }
+  .catch-location { font-size: 11px; color: var(--green-mid); margin-top: 2px; font-weight: 500; }
+  .catch-location.loading { color: var(--gray-300); }
+  .leaflet-popup-content-wrapper { border-radius: 12px !important; }
+  .popup-weight { font-size: 15px; font-weight: 700; color: #0a3d2b; margin-bottom: 3px; }
+  .popup-meta { color: #5F5E5A; font-size: 12px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<!-- Splash screen -->
+<div class="splash" id="splash">
+  <div class="splash-logo"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 512 512" width="180" height="180">
+  <defs>
+    <clipPath id="circle-clip">
+      <circle cx="256" cy="256" r="256"/>
+    </clipPath>
+    <radialGradient id="bg-grad" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#0d5c3a"/>
+      <stop offset="100%" stop-color="#051e12"/>
+    </radialGradient>
+    <filter id="chip-glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="fish-shadow">
+      <feDropShadow dx="3" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Dark green gradient background circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#bg-grad)"/>
+
+  <!-- Bass fish group -- scaled and positioned, clipped to circle -->
+  <g clip-path="url(#circle-clip)" filter="url(#fish-shadow)">
+    <!-- Scale and center the fish SVG (originally 512x512) -->
+    <g transform="translate(10, 30) scale(0.88)">
+
+      <!-- Recolor the fish -- replace dark navy with rich green tones -->
+      <!-- Body fills (was #16153B -> dark green) -->
+      <g fill="#1a6b35">
+        <path d="M283.213,452.111c-105.975,0-189.519-97.544-193.023-101.696c-4.359-5.165-4.359-12.721,0-17.886c3.504-4.153,87.048-101.696,193.023-101.696s189.519,97.544,193.023,101.696c4.94,5.853,4.199,14.601-1.651,19.54c-5.851,4.939-14.599,4.2-19.54-1.653c-0.771-0.91-78.867-91.851-171.831-91.851c-75.597,0-141.066,59.789-163.54,82.895c22.507,23.085,88.131,82.92,163.54,82.92c7.657,0,13.866,6.208,13.866,13.866S290.869,452.111,283.213,452.111z"/>
+        <path d="M43.965,472.794c-0.003,0-0.001,0-0.004,0c-17.094,0-29.902-2.414-30.439-2.517c-5.58-1.069-9.943-5.431-11.012-11.011c-0.548-2.861-12.997-70.463,23.116-106.575c21.061-21.061,52.732-25.563,75.59-25.631c0.014,0,0.028,0,0.042,0c5.422,0,10.347,3.16,12.606,8.091c0.053,0.114,0.103,0.229,0.151,0.342c4.301,4.724,13.698,14.605,26.917,26.043c3.066,2.653,4.817,6.513,4.793,10.567c-0.134,22.683-4.688,54.12-25.628,75.059C98.911,468.344,67.002,472.794,43.965,472.794z M28.395,444.303c4.231,0.408,9.594,0.757,15.566,0.757c0,0,0.003,0,0.004,0c17.797,0,42.049-3.038,56.521-17.511c12.654-12.654,16.548-32.817,17.341-49.411c-11.025-9.881-19.095-18.275-23.58-23.163c-16.584,0.839-36.474,4.785-49.012,17.323C27.309,390.223,26.462,424.504,28.395,444.303z"/>
+        <path d="M101.256,355.887c-0.014,0-0.028,0-0.042,0c-22.859-0.068-54.531-4.572-75.59-25.633C-10.487,294.142,1.962,226.54,2.51,223.679c1.069-5.578,5.431-9.942,11.011-11.011c0.537-0.103,13.342-2.517,30.441-2.517c23.038,0,54.948,4.448,76.135,25.633c20.939,20.939,25.494,52.375,25.627,75.059c0.024,4.053-1.728,7.915-4.793,10.567c-13.214,11.435-22.611,21.313-26.917,26.042c-0.05,0.116-0.101,0.233-0.154,0.348C111.6,352.728,106.675,355.887,101.256,355.887z M28.476,238.632c-1.656,17.187-2.378,52.877,16.758,72.013c12.536,12.538,32.427,16.484,49.012,17.324c4.486-4.889,12.556-13.282,23.58-23.163c-0.795-16.595-4.687-36.757-17.341-49.411c-14.473-14.473-38.728-17.511-56.526-17.511C38.027,237.883,32.696,238.227,28.476,238.632z"/>
+        <path d="M362.957,433.144c-3.279,0-6.523-1.162-9.096-3.399c-27.334-23.744-43.011-58.086-43.011-94.221c0-31.662,11.896-61.864,33.497-85.044c3.953-4.242,10.126-5.577,15.483-3.343c67.647,28.221,114.443,83.068,116.402,85.389c4.361,5.166,4.361,12.722,0,17.889c-1.791,2.121-44.599,52.311-107.449,81.442C366.923,432.723,364.933,433.144,362.957,433.144z M358.366,276.825c-12.816,16.829-19.783,37.34-19.783,58.702c0,25.089,9.723,49.07,26.946,67.071c37.971-19.448,67.549-47.074,81.224-61.125C432.236,326.558,399.778,296.331,358.366,276.825z"/>
+
+
+
+      </g>
+
+      <!-- Light blue highlights (was #97C4E8 -> lighter green) -->
+      <g fill="#4dc48a">
+        <path d="M100.785,341.472c0,0,0.165-0.196,0.471-0.549c-20.75,0.062-48.247,3.989-65.827,21.57c-31.333,31.333-19.301,94.163-19.301,94.163s62.831,12.03,94.162-19.301c17.443-17.443,21.445-44.644,21.567-65.336C112.239,355.043,100.785,341.472,100.785,341.472z"/>
+        <path d="M100.785,341.472c0,0,11.453-13.571,31.072-30.547c-0.122-20.692-4.124-47.893-21.567-65.337c-31.333-31.333-94.162-19.301-94.162-19.301s-12.03,62.831,19.301,94.162c17.581,17.581,45.077,21.509,65.827,21.57C100.951,341.667,100.785,341.472,100.785,341.472z"/>
+        <path d="M354.493,259.936c-18.463,19.812-29.776,46.373-29.776,75.59c0,33.448,14.826,63.415,38.238,83.753c60.788-28.176,102.683-77.806,102.683-77.806S419.823,287.191,354.493,259.936z"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- AI CHIP -- 2x size, replaces hook -->
+  <!-- Glow rings -->
+  <circle cx="350.0" cy="110" r="130" fill="#1dce96" opacity="0.07"/>
+  <circle cx="350.0" cy="110" r="105" fill="#1dce96" opacity="0.10"/>
+  <circle cx="350.0" cy="110" r="80"  fill="#1dce96" opacity="0.08"/>
+
+  <!-- Chip body 192x156 centered at 430,110 -->
+  <rect x="254.0" y="32" width="192" height="156" rx="14"
+        fill="#061f14" stroke="#1dce96" stroke-width="5"/>
+
+  <!-- Internal circuit lines horizontal -->
+  <line x1="270.0" y1="62"  x2="438.0" y2="62"  stroke="#1dce96" stroke-width="2.5" opacity="0.6"/>
+  <line x1="270.0" y1="84"  x2="438.0" y2="84"  stroke="#1dce96" stroke-width="2.5" opacity="0.6"/>
+  <line x1="270.0" y1="110" x2="438.0" y2="110" stroke="#1dce96" stroke-width="2.5" opacity="0.6"/>
+  <line x1="270.0" y1="136" x2="438.0" y2="136" stroke="#1dce96" stroke-width="2.5" opacity="0.6"/>
+  <line x1="270.0" y1="158" x2="438.0" y2="158" stroke="#1dce96" stroke-width="2.5" opacity="0.6"/>
+  <!-- Vertical -->
+  <line x1="295.0" y1="38" x2="295.0" y2="182" stroke="#1dce96" stroke-width="2" opacity="0.4"/>
+  <line x1="350.0" y1="38" x2="350.0" y2="182" stroke="#1dce96" stroke-width="2.5" opacity="0.6"/>
+  <line x1="405.0" y1="38" x2="405.0" y2="182" stroke="#1dce96" stroke-width="2" opacity="0.4"/>
+
+  <!-- Pins left (6) -->
+  <rect x="230.0" y="50"  width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="230.0" y="68"  width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="230.0" y="86"  width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="230.0" y="120" width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="230.0" y="138" width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="230.0" y="156" width="24" height="8" rx="3" fill="#1dce96"/>
+  <!-- Pins right (6) -->
+  <rect x="446.0" y="50"  width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="446.0" y="68"  width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="446.0" y="86"  width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="446.0" y="120" width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="446.0" y="138" width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="446.0" y="156" width="24" height="8" rx="3" fill="#1dce96"/>
+  <!-- Pins top (5) -->
+  <rect x="275.0" y="8"  width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="295.0" y="8"  width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="342.0" y="8"  width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="364.0" y="8"  width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="385.0" y="8"  width="8" height="24" rx="3" fill="#1dce96"/>
+  <!-- Pins bottom (5) -->
+  <rect x="275.0" y="188" width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="295.0" y="188" width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="342.0" y="188" width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="364.0" y="188" width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="385.0" y="188" width="8" height="24" rx="3" fill="#1dce96"/>
+
+  <!-- Center processor node -->
+  <circle cx="350.0" cy="110" r="36" fill="#1dce96" opacity="0.95"/>
+  <circle cx="350.0" cy="110" r="20" fill="white" opacity="0.95"/>
+
+  <!-- "AI" label -->
+  <text x="350.0" y="116" font-family="Arial" font-size="22" font-weight="bold"
+        fill="#061f14" text-anchor="middle">AI</text>
+
+  <!-- Pulse dots along line suggesting data transmission -->
+  <circle cx="290.0" cy="158" r="4" fill="#1dce96" opacity="0.8"/>
+  <circle cx="258.0" cy="210" r="4" fill="#1dce96" opacity="0.7"/>
+  <circle cx="230.0" cy="265" r="4" fill="#1dce96" opacity="0.6"/>
+
+</svg></div>
+  <div class="splash-title">FishAI</div>
+  <div class="splash-sub">Real-time bite windows &amp; strategy</div>
+  <div class="splash-dots">
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+  </div>
+  <div class="splash-version">v2.0</div>
+</div>
+
+<div id="debugBar" style="display:none;position:fixed;top:0;left:0;right:0;background:#cc0000;color:#fff;padding:10px 14px;font-size:13px;z-index:9999;word-break:break-all"></div>
+<div class="bite-alert" id="biteAlert">
+  <span class="bite-alert-icon">🔥</span>
+  <div class="bite-alert-body">
+    <div class="bite-alert-title" id="biteAlertTitle">Hot bite window starting!</div>
+    <div class="bite-alert-sub" id="biteAlertSub">Conditions are firing right now</div>
+  </div>
+  <button class="bite-alert-close" onclick="dismissBiteAlert()">✕</button>
+</div>
+<div class="update-banner" id="updateBanner">
+  <span class="update-banner-icon">🆕</span>
+  <div class="update-banner-body">
+    <div class="update-banner-title">Update Available</div>
+    <div class="update-banner-sub" id="updateBannerSub">A new version of FishAI is ready</div>
+  </div>
+  <button class="update-banner-btn" id="updateBannerBtn" onclick="openUpdate()">Update</button>
+  <button class="update-banner-close" onclick="dismissUpdate()">✕</button>
+</div>
+<div class="error-bar" id="errorBar"></div>
+
+<!-- ===== HOME PAGE ===== -->
+<div class="page active" id="pageHome">
+  <div class="app-header">
+    <div class="header-top">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="header-logo"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 512 512" width="32" height="32">
+  <defs>
+    <clipPath id="circle-clip">
+      <circle cx="256" cy="256" r="256"/>
+    </clipPath>
+    <radialGradient id="bg-grad" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#0d5c3a"/>
+      <stop offset="100%" stop-color="#051e12"/>
+    </radialGradient>
+    <filter id="chip-glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="fish-shadow">
+      <feDropShadow dx="3" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Dark green gradient background circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#bg-grad)"/>
+
+  <!-- Bass fish group -- scaled and positioned, clipped to circle -->
+  <g clip-path="url(#circle-clip)" filter="url(#fish-shadow)">
+    <!-- Scale and center the fish SVG (originally 512x512) -->
+    <g transform="translate(10, 30) scale(0.88)">
+
+      <!-- Recolor the fish -- replace dark navy with rich green tones -->
+      <!-- Body fills (was #16153B -> dark green) -->
+      <g fill="#1a6b35">
+        <path d="M283.213,452.111c-105.975,0-189.519-97.544-193.023-101.696c-4.359-5.165-4.359-12.721,0-17.886c3.504-4.153,87.048-101.696,193.023-101.696s189.519,97.544,193.023,101.696c4.94,5.853,4.199,14.601-1.651,19.54c-5.851,4.939-14.599,4.2-19.54-1.653c-0.771-0.91-78.867-91.851-171.831-91.851c-75.597,0-141.066,59.789-163.54,82.895c22.507,23.085,88.131,82.92,163.54,82.92c7.657,0,13.866,6.208,13.866,13.866S290.869,452.111,283.213,452.111z"/>
+        <path d="M43.965,472.794c-0.003,0-0.001,0-0.004,0c-17.094,0-29.902-2.414-30.439-2.517c-5.58-1.069-9.943-5.431-11.012-11.011c-0.548-2.861-12.997-70.463,23.116-106.575c21.061-21.061,52.732-25.563,75.59-25.631c0.014,0,0.028,0,0.042,0c5.422,0,10.347,3.16,12.606,8.091c0.053,0.114,0.103,0.229,0.151,0.342c4.301,4.724,13.698,14.605,26.917,26.043c3.066,2.653,4.817,6.513,4.793,10.567c-0.134,22.683-4.688,54.12-25.628,75.059C98.911,468.344,67.002,472.794,43.965,472.794z M28.395,444.303c4.231,0.408,9.594,0.757,15.566,0.757c0,0,0.003,0,0.004,0c17.797,0,42.049-3.038,56.521-17.511c12.654-12.654,16.548-32.817,17.341-49.411c-11.025-9.881-19.095-18.275-23.58-23.163c-16.584,0.839-36.474,4.785-49.012,17.323C27.309,390.223,26.462,424.504,28.395,444.303z"/>
+        <path d="M101.256,355.887c-0.014,0-0.028,0-0.042,0c-22.859-0.068-54.531-4.572-75.59-25.633C-10.487,294.142,1.962,226.54,2.51,223.679c1.069-5.578,5.431-9.942,11.011-11.011c0.537-0.103,13.342-2.517,30.441-2.517c23.038,0,54.948,4.448,76.135,25.633c20.939,20.939,25.494,52.375,25.627,75.059c0.024,4.053-1.728,7.915-4.793,10.567c-13.214,11.435-22.611,21.313-26.917,26.042c-0.05,0.116-0.101,0.233-0.154,0.348C111.6,352.728,106.675,355.887,101.256,355.887z M28.476,238.632c-1.656,17.187-2.378,52.877,16.758,72.013c12.536,12.538,32.427,16.484,49.012,17.324c4.486-4.889,12.556-13.282,23.58-23.163c-0.795-16.595-4.687-36.757-17.341-49.411c-14.473-14.473-38.728-17.511-56.526-17.511C38.027,237.883,32.696,238.227,28.476,238.632z"/>
+        <path d="M362.957,433.144c-3.279,0-6.523-1.162-9.096-3.399c-27.334-23.744-43.011-58.086-43.011-94.221c0-31.662,11.896-61.864,33.497-85.044c3.953-4.242,10.126-5.577,15.483-3.343c67.647,28.221,114.443,83.068,116.402,85.389c4.361,5.166,4.361,12.722,0,17.889c-1.791,2.121-44.599,52.311-107.449,81.442C366.923,432.723,364.933,433.144,362.957,433.144z M358.366,276.825c-12.816,16.829-19.783,37.34-19.783,58.702c0,25.089,9.723,49.07,26.946,67.071c37.971-19.448,67.549-47.074,81.224-61.125C432.236,326.558,399.778,296.331,358.366,276.825z"/>
+
+
+
+      </g>
+
+      <!-- Light blue highlights (was #97C4E8 -> lighter green) -->
+      <g fill="#4dc48a">
+        <path d="M100.785,341.472c0,0,0.165-0.196,0.471-0.549c-20.75,0.062-48.247,3.989-65.827,21.57c-31.333,31.333-19.301,94.163-19.301,94.163s62.831,12.03,94.162-19.301c17.443-17.443,21.445-44.644,21.567-65.336C112.239,355.043,100.785,341.472,100.785,341.472z"/>
+        <path d="M100.785,341.472c0,0,11.453-13.571,31.072-30.547c-0.122-20.692-4.124-47.893-21.567-65.337c-31.333-31.333-94.162-19.301-94.162-19.301s-12.03,62.831,19.301,94.162c17.581,17.581,45.077,21.509,65.827,21.57C100.951,341.667,100.785,341.472,100.785,341.472z"/>
+        <path d="M354.493,259.936c-18.463,19.812-29.776,46.373-29.776,75.59c0,33.448,14.826,63.415,38.238,83.753c60.788-28.176,102.683-77.806,102.683-77.806S419.823,287.191,354.493,259.936z"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- AI CHIP -- 2x size, replaces hook -->
+  <!-- Glow rings -->
+  <circle cx="350.0" cy="110" r="130" fill="#1dce96" opacity="0.07"/>
+  <circle cx="350.0" cy="110" r="105" fill="#1dce96" opacity="0.10"/>
+  <circle cx="350.0" cy="110" r="80"  fill="#1dce96" opacity="0.08"/>
+
+  <!-- Chip body 192x156 centered at 430,110 -->
+  <rect x="254.0" y="32" width="192" height="156" rx="14"
+        fill="#061f14" stroke="#1dce96" stroke-width="5"/>
+
+  <!-- Internal circuit lines horizontal -->
+  <line x1="270.0" y1="62"  x2="438.0" y2="62"  stroke="#1dce96" stroke-width="2.5" opacity="0.6"/>
+  <line x1="270.0" y1="84"  x2="438.0" y2="84"  stroke="#1dce96" stroke-width="2.5" opacity="0.6"/>
+  <line x1="270.0" y1="110" x2="438.0" y2="110" stroke="#1dce96" stroke-width="2.5" opacity="0.6"/>
+  <line x1="270.0" y1="136" x2="438.0" y2="136" stroke="#1dce96" stroke-width="2.5" opacity="0.6"/>
+  <line x1="270.0" y1="158" x2="438.0" y2="158" stroke="#1dce96" stroke-width="2.5" opacity="0.6"/>
+  <!-- Vertical -->
+  <line x1="295.0" y1="38" x2="295.0" y2="182" stroke="#1dce96" stroke-width="2" opacity="0.4"/>
+  <line x1="350.0" y1="38" x2="350.0" y2="182" stroke="#1dce96" stroke-width="2.5" opacity="0.6"/>
+  <line x1="405.0" y1="38" x2="405.0" y2="182" stroke="#1dce96" stroke-width="2" opacity="0.4"/>
+
+  <!-- Pins left (6) -->
+  <rect x="230.0" y="50"  width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="230.0" y="68"  width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="230.0" y="86"  width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="230.0" y="120" width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="230.0" y="138" width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="230.0" y="156" width="24" height="8" rx="3" fill="#1dce96"/>
+  <!-- Pins right (6) -->
+  <rect x="446.0" y="50"  width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="446.0" y="68"  width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="446.0" y="86"  width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="446.0" y="120" width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="446.0" y="138" width="24" height="8" rx="3" fill="#1dce96"/>
+  <rect x="446.0" y="156" width="24" height="8" rx="3" fill="#1dce96"/>
+  <!-- Pins top (5) -->
+  <rect x="275.0" y="8"  width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="295.0" y="8"  width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="342.0" y="8"  width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="364.0" y="8"  width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="385.0" y="8"  width="8" height="24" rx="3" fill="#1dce96"/>
+  <!-- Pins bottom (5) -->
+  <rect x="275.0" y="188" width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="295.0" y="188" width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="342.0" y="188" width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="364.0" y="188" width="8" height="24" rx="3" fill="#1dce96"/>
+  <rect x="385.0" y="188" width="8" height="24" rx="3" fill="#1dce96"/>
+
+  <!-- Center processor node -->
+  <circle cx="350.0" cy="110" r="36" fill="#1dce96" opacity="0.95"/>
+  <circle cx="350.0" cy="110" r="20" fill="white" opacity="0.95"/>
+
+  <!-- "AI" label -->
+  <text x="350.0" y="116" font-family="Arial" font-size="22" font-weight="bold"
+        fill="#061f14" text-anchor="middle">AI</text>
+
+  <!-- Pulse dots along line suggesting data transmission -->
+  <circle cx="290.0" cy="158" r="4" fill="#1dce96" opacity="0.8"/>
+  <circle cx="258.0" cy="210" r="4" fill="#1dce96" opacity="0.7"/>
+  <circle cx="230.0" cy="265" r="4" fill="#1dce96" opacity="0.6"/>
+
+</svg></div>
+        <div>
+          <div class="app-title">FishAI</div>
+          <div class="app-subtitle" id="headerSub">Locating you...</div>
+        </div>
+      </div>
+      <button class="refresh-btn" onclick="silentRefresh()" title="Refresh">↻</button>
+    </div>
+    <button class="loc-pill" onclick="silentRefresh()">
+      <span>📍</span>
+      <span id="locLabel">Getting location...</span>
+    </button>
+  </div>
+
+  <div class="status-bar" id="statusBar">
+    <div class="stat-chip"><div class="val" id="scTemp">--</div><div class="lbl">Air Temp</div></div>
+    <div class="stat-chip"><div class="val" id="scPressure">--</div><div class="lbl">Pressure</div></div>
+    <div class="stat-chip"><div class="val" id="scWind">--</div><div class="lbl">Wind</div></div>
+    <div class="stat-chip"><div class="val" id="scMoon">--</div><div class="lbl">Moon</div></div>
+    <div class="stat-chip"><div class="val" id="scWaterTemp">--</div><div class="lbl">Water Temp</div></div>
+  </div>
+
+      <div class="species-row">
+    <button class="species-btn active" onclick="setSpecies('largemouth')" id="spLargemouth">
+      <span class="sp-icon">🐟</span>
+      <span>Largemouth</span>
+    </button>
+    <button class="species-btn" onclick="setSpecies('smallmouth')" id="spSmallmouth">
+      <span class="sp-icon">🎣</span>
+      <span>Smallmouth</span>
+    </button>
+    <button class="species-btn" onclick="setSpecies('pike')" id="spPike">
+      <span class="sp-icon">🦈</span>
+      <span>N. Pike</span>
+    </button>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <span class="section-title">Bite Window</span>
+      <span class="bite-badge" id="overallBadge" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;">--</span>
+    </div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('today')" id="tabToday">Today</button>
+      <button class="tab-btn" onclick="switchTab('week')" id="tabWeek">7-Day Forecast</button>
+    </div>
+    <div id="viewToday">
+      <div class="bite-card">
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </div>
+    <div id="viewWeek" style="display:none">
+      <div class="week-list" id="weekList"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Top Lures Right Now</div>
+    <div class="lure-scroll" id="lureScroll"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Live Conditions</div>
+    <div class="cond-grid" id="condGrid"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Pro Tips</div>
+    <div class="tip-list" id="tipList"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Water Conditions</div>
+    <div class="water-panel">
+      <div class="water-panel-header" onclick="toggleWaterPanel()" id="waterPanelHeader">
+        <div>
+          <div class="water-panel-title">📊 Enter what you see at the water</div>
+          <div class="water-panel-sub" id="waterPanelSub">Tap to adjust — improves lure suggestions</div>
+        </div>
+        <span class="water-panel-arrow" id="waterPanelArrow">▼</span>
+      </div>
+      <div class="water-panel-body" id="waterPanelBody">
+
+        <div class="input-row">
+          <div class="input-group">
+            <span class="input-label">Water Temp (°F)</span>
+            <input class="input-field" type="number" id="inputWaterTemp"
+              placeholder="e.g. 64" min="32" max="100"
+              onchange="updateConditionsSummary()">
+          </div>
+          <div class="input-group">
+            <span class="input-label">Depth (ft)</span>
+            <input class="input-field" type="number" id="inputDepth"
+              placeholder="e.g. 8" min="1" max="60"
+              onchange="updateConditionsSummary()">
+          </div>
+        </div>
+
+        <div class="input-label" style="margin-bottom:8px">Water Clarity</div>
+        <div class="clarity-row">
+          <button class="clarity-btn selected" onclick="selectClarity('clear')" id="clarityClear">🔵 Clear</button>
+          <button class="clarity-btn" onclick="selectClarity('stained')" id="clarityStained">🟡 Stained</button>
+          <button class="clarity-btn" onclick="selectClarity('muddy')" id="clarityMuddy">🟤 Muddy</button>
+        </div>
+
+        <div class="input-label" style="margin-bottom:8px">Structure nearby</div>
+        <div class="structure-row" id="structureRow">
+          <button class="structure-chip" onclick="toggleStructure('Grass')">🌿 Grass</button>
+          <button class="structure-chip" onclick="toggleStructure('Dock')">🛥️ Dock</button>
+          <button class="structure-chip" onclick="toggleStructure('Rock')">🪨 Rock</button>
+          <button class="structure-chip" onclick="toggleStructure('Wood')">🪵 Wood</button>
+          <button class="structure-chip" onclick="toggleStructure('Open water')">🌊 Open water</button>
+          <button class="structure-chip" onclick="toggleStructure('Points')">📍 Points</button>
+          <button class="structure-chip" onclick="toggleStructure('Pads')">🍀 Pads</button>
+          <button class="structure-chip" onclick="toggleStructure('Deep')">⬇️ Deep</button>
+        </div>
+
+        <button class="apply-btn" onclick="applyWaterConditions()">
+          <span>⚡</span> Update Strategy
+        </button>
+      </div>
+    </div>
+    <div class="conditions-summary" id="conditionsSummary"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">AI Strategy Engine</div>
+    <div class="strategy-card" id="strategyCard">
+      <div style="text-align:center;padding:20px 0;color:var(--green-light);font-size:14px;">Loading strategy...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOG PAGE ===== -->
+<div class="page" id="pageLog">
+  <div class="app-header" style="padding-top: calc(16px + env(safe-area-inset-top))">
+    <div class="app-title">Catch Log</div>
+    <div class="app-subtitle">Your personal bass record</div>
+  </div>
+
+  <div class="section" style="margin-top:16px">
+    <button class="log-btn" onclick="openLogModal()">
+      <span>＋</span> Log a Catch
+    </button>
+    <div class="catch-list" id="catchList"></div>
+  </div>
+</div>
+
+<!-- ===== MAP PAGE ===== -->
+<div class="page" id="pageMap">
+  <div class="app-header" style="padding-top: calc(16px + env(safe-area-inset-top))">
+    <div class="app-title">Catch Map</div>
+    <div class="app-subtitle" id="mapSubtitle">Your fishing spots</div>
+  </div>
+  <div class="section" style="margin-top:16px">
+    <div id="mapContainer"></div>
+  </div>
+</div>
+
+<!-- ===== LURE DETAIL SHEET ===== -->
+<div class="sheet-overlay" id="lureSheet" onclick="closeLureSheet(event)">
+  <div class="lure-sheet" id="lureSheetContent">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-icon" id="sheetIcon">🎣</span>
+      <div>
+        <div class="sheet-name" id="sheetName">Lure</div>
+        <span class="sheet-tag" id="sheetTag"></span>
+      </div>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+    <button class="sheet-close" onclick="document.getElementById('lureSheet').classList.remove('open')">Close</button>
+  </div>
+</div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchPage('Home')" id="navHome">
+    <div class="nav-ico">🎣</div><div class="nav-lbl">Finder</div>
+  </div>
+  <div class="nav-item" onclick="switchPage('Log')" id="navLog">
+    <div class="nav-ico">📋</div><div class="nav-lbl">Catch Log</div>
+  </div>
+  <div class="nav-item" onclick="switchPage('Map')" id="navMap">
+    <div class="nav-ico">🗺️</div><div class="nav-lbl">Map</div>
+  </div>
+</div>
+
+<!-- Log Modal -->
+<div class="modal-overlay" id="logModal">
+  <div class="modal">
+    <div class="modal-title">Log a Catch</div>
+    <label>Weight (lbs)</label>
+    <input type="number" id="catchWeight" placeholder="e.g. 3.2" step="0.1" min="0">
+    <label>Length (inches)</label>
+    <input type="number" id="catchLength" placeholder="e.g. 16" step="0.5" min="0">
+    <label>Lure Used</label>
+    <input type="text" id="catchLure" placeholder="e.g. Senko worm, chartreuse">
+    <label>Notes</label>
+    <input type="text" id="catchNotes" placeholder="depth, structure, time...">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeLogModal()">Cancel</button>
+      <button class="btn-save" onclick="saveCatch()">Save Catch</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── App version ───────────────────────────────────────────────────────────
+var APP_VERSION = '1.0.0';
+var VERSION_CHECK_URL = 'https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/main/version.json';
+
+// ── Global error catcher -- shows any crash visibly on screen ───────────────
+window.onerror = function(msg, src, line) {
+  const d = document.getElementById('debugBar');
+  if (d) { d.style.display = 'block'; d.textContent = 'JS Error line ' + line + ': ' + msg; }
+  return false;
+};
+window.onunhandledrejection = function(e) {
+  const d = document.getElementById('debugBar');
+  if (d) { d.style.display = 'block'; d.textContent = 'Promise error: ' + e.reason; }
+};
+
+// ── State ──────────────────────────────────────────────────────────────────
+let lat = null, lon = null;
+let weatherData = null;
+let currentMoon = null;
+let skillLevel = 'intermediate';
+let catches = JSON.parse('[]');
+
+// ── Moon phase calculation (no API needed) ─────────────────────────────────
+function getMoonPhase(date) {
+  const knownNew = new Date(2000, 0, 6, 18, 14, 0);
+  const synodicMonth = 29.530588853;
+  const diff = (date - knownNew) / (1000 * 60 * 60 * 24);
+  const cycle = ((diff % synodicMonth) + synodicMonth) % synodicMonth;
+  const pct = cycle / synodicMonth;
+  if (pct < 0.03 || pct > 0.97) return { emoji: '🌑', name: 'New Moon', bite: 0.85 };
+  if (pct < 0.22) return { emoji: '🌒', name: 'Waxing Crescent', bite: 0.65 };
+  if (pct < 0.28) return { emoji: '🌓', name: 'First Quarter', bite: 0.75 };
+  if (pct < 0.47) return { emoji: '🌔', name: 'Waxing Gibbous', bite: 0.80 };
+  if (pct < 0.53) return { emoji: '🌕', name: 'Full Moon', bite: 0.95 };
+  if (pct < 0.72) return { emoji: '🌖', name: 'Waning Gibbous', bite: 0.80 };
+  if (pct < 0.78) return { emoji: '🌗', name: 'Last Quarter', bite: 0.70 };
+  return { emoji: '🌘', name: 'Waning Crescent', bite: 0.60 };
+}
+
+// ── Bite score engine ──────────────────────────────────────────────────────
+const TIME_SLOTS = [
+  { label: 'Pre-Dawn',  hours: [4, 6] },
+  { label: 'Dawn',      hours: [6, 8] },
+  { label: 'Morning',   hours: [8, 11] },
+  { label: 'Midday',    hours: [11, 14] },
+  { label: 'Afternoon', hours: [14, 17] },
+  { label: 'Evening',   hours: [17, 20] },
+  { label: 'Dusk',      hours: [20, 22] },
+];
+
+function biteScore(slotHours, wx, moon) {
+  const midH = (slotHours[0] + slotHours[1]) / 2;
+  const month = new Date().getMonth();
+  const isSpring = month >= 2 && month <= 4;
+  const isSummer = month >= 5 && month <= 7;
+  const isFall   = month >= 8 && month <= 10;
+  const tempF = wx ? wx.temp_f : 68;
+  const pressureHpa = wx ? wx.pressure_hpa : 1013;
+
+  let score = 0.35;
+
+  if (currentSpecies === 'smallmouth') {
+    // Smallmouth -- most active mid-morning and evening, love current and cool water
+    // Peak activity in fall, active even in cold water down to 45F
+    if (midH >= 5 && midH <= 8) score = 0.80;
+    else if (midH >= 8 && midH <= 11) score = 0.88; // smallmouth peak morning
+    else if (midH >= 11 && midH <= 14) score = 0.45; // less mid-day shutdown than largemouth
+    else if (midH >= 14 && midH <= 18) score = 0.65;
+    else if (midH >= 18 && midH <= 21) score = 0.85;
+
+    // Smallmouth love cool water -- peak 55-68F, still active down to 45F
+    if (tempF >= 55 && tempF <= 68) score *= 1.25;
+    else if (tempF >= 45 && tempF < 55) score *= 1.0; // still active, just slower
+    else if (tempF > 75) score *= 0.80; // smallmouth go deep in heat
+    else if (tempF < 45) score *= 0.65;
+
+    // Season -- fall is prime smallmouth time
+    if (isFall) score *= 1.3;
+    if (isSpring) score *= 1.15;
+    if (isSummer && midH > 10 && midH < 16) score *= 0.7;
+
+    // Smallmouth love overcast -- reduces visibility advantage of clear water
+    if (wx && wx.is_overcast) score *= 1.15;
+
+  } else if (currentSpecies === 'pike') {
+    // Northern Pike -- most active morning, tolerate cold extremely well
+    // Peak activity in spring and fall, slow in summer heat
+    if (midH >= 4 && midH <= 7) score = 0.78;
+    else if (midH >= 7 && midH <= 10) score = 0.92; // pike peak morning
+    else if (midH >= 10 && midH <= 14) score = 0.40; // pike go deep mid-day in summer
+    else if (midH >= 14 && midH <= 17) score = 0.55;
+    else if (midH >= 17 && midH <= 20) score = 0.80;
+
+    // Pike thrive in cold water -- most active 45-65F, sluggish above 72F
+    if (tempF >= 45 && tempF <= 65) score *= 1.3;
+    else if (tempF > 65 && tempF <= 72) score *= 1.0;
+    else if (tempF > 72) score *= 0.65; // pike very lethargic in warm water
+    else if (tempF < 40) score *= 0.75; // still catchable under ice
+
+    // Season -- spring pre-spawn and fall are prime pike seasons
+    if (isSpring) score *= 1.35; // pike most aggressive pre-spawn
+    if (isFall) score *= 1.25;   // fall feeding frenzy
+    if (isSummer && midH > 9 && midH < 17) score *= 0.55; // summer mid-day very slow
+
+    // Overcast is great for pike -- they hunt by sight and clouds help them
+    if (wx && wx.is_overcast) score *= 1.2;
+    // Wind creates chop -- pike love wind-blown weed edges
+    if (wx && wx.wind_mph >= 8 && wx.wind_mph <= 18) score *= 1.1;
+
+  } else {
+    // Largemouth -- original scoring
+    if (midH >= 5 && midH <= 8) score = 0.85;
+    else if (midH >= 8 && midH <= 10) score = 0.70;
+    else if (midH >= 11 && midH <= 14) score = 0.30;
+    else if (midH >= 15 && midH <= 18) score = 0.65;
+    else if (midH >= 18 && midH <= 21) score = 0.88;
+
+    if (isSpring) score *= 1.2;
+    if (isSummer && (midH < 8 || midH > 18)) score *= 1.25;
+    if (isSummer && midH > 10 && midH < 16) score *= 0.6;
+    if (isFall && midH >= 8 && midH <= 11) score *= 1.15;
+
+    if (tempF >= 60 && tempF <= 80) score *= 1.15;
+    else if (tempF < 45 || tempF > 90) score *= 0.7;
+
+    if (wx && wx.is_overcast) score *= 1.1;
+  }
+
+  // Shared weather modifiers
+  if (pressureHpa > 1020) score *= 1.1;
+  else if (pressureHpa < 1005) score *= 0.8;
+  if (wx && wx.wind_mph > 20) score *= 0.85;
+
+  // Moon modifier
+  score *= moon.bite;
+
+  return Math.min(Math.max(score, 0.05), 1.0);
+}
+
+function levelClass(v) {
+  if (v >= 0.70) return 'hot';
+  if (v >= 0.45) return 'good';
+  return 'slow';
+}
+
+// ── Lure recommendations ───────────────────────────────────────────────────
+function getLures(wx, month) {
+  const tempF = wx ? wx.temp_f : 68;
+  const hour = new Date().getHours();
+  const isTopwater = hour < 9 || hour > 18;
+  const isDawn = hour < 7 || hour > 19;
+  const lures = [];
+
+  if (currentSpecies === 'smallmouth') {
+    // Smallmouth lures
+    if (tempF < 55) {
+      lures.push({ icon: '🪱', name: 'Ned Rig', desc: 'Deadliest cold water smallmouth bait. Go painfully slow.', tag: '🔥 Cold water' });
+      lures.push({ icon: '🎯', name: 'Drop Shot', desc: 'Finesse worm suspended near bottom. Deadly in clear cold water.', tag: '⭐ Finesse' });
+    } else if (tempF <= 72) {
+      lures.push({ icon: '🦞', name: 'Tube Bait', desc: 'Crawfish imitation. Drag on rock bottom. Smallmouth gold.', tag: '🔥 Prime' });
+      lures.push({ icon: '🪝', name: 'Inline Spinner', desc: 'Fast retrieve through current seams and eddies.', tag: '⭐ Rivers' });
+    } else {
+      lures.push({ icon: '🐟', name: 'Swimbait', desc: 'Match the shad or goby. Slow roll over deep rock.', tag: '🔥 Summer' });
+      lures.push({ icon: '💦', name: 'Topwater Popper', desc: 'Early morning over rocky points and gravel flats.', tag: isDawn ? '🔥 Dawn' : '⭐ Pick' });
+    }
+    if (month >= 2 && month <= 4) {
+      lures.push({ icon: '🦞', name: 'Crawfish Crank', desc: 'Square bill on gravel and chunk rock. Pre-spawn trigger.', tag: '🔥 Spring' });
+    } else if (month >= 8 && month <= 10) {
+      lures.push({ icon: '🪝', name: 'Inline Spinner', desc: 'Fall smallmouth stack up chasing baitfish. Fast retrieve.', tag: '🔥 Fall' });
+    } else {
+      lures.push({ icon: '🪱', name: 'Shaky Head', desc: 'Finesse worm on gravel bottom. Never fails on smallmouth.', tag: '⭐ Depth' });
+    }
+    if (isTopwater) lures.unshift({ icon: '💦', name: 'Topwater Popper', desc: 'Dawn smallmouth on rocky points hit topwater hard.', tag: '🔥 Dawn' });
+
+  } else if (currentSpecies === 'pike') {
+    // Northern Pike lures
+    if (tempF < 50) {
+      lures.push({ icon: '🐟', name: 'Swimbait (large)', desc: '6-8in paddle tail. Pike active in cold, just slow the retrieve.', tag: '🔥 Cold' });
+      lures.push({ icon: '🪝', name: 'Spinnerbait', desc: 'Large Colorado blade. Slow roll near bottom structure.', tag: '⭐ Pick' });
+    } else if (tempF <= 68) {
+      lures.push({ icon: '🎣', name: 'Spoon', desc: 'Weedless spoon over shallow flats. Classic pike killer.', tag: '🔥 Prime' });
+      lures.push({ icon: '🐟', name: 'Jerkbait', desc: 'Twitch-pause in open water. Pike ambush from below.', tag: '⭐ Open water' });
+    } else {
+      lures.push({ icon: '🐸', name: 'Large Frog', desc: 'Pike crush frogs over weed mats. Use wire leader.', tag: '🔥 Summer' });
+      lures.push({ icon: '🎣', name: 'Weedless Spoon', desc: 'Slow roll over cabbage weeds. Where big pike live in summer.', tag: '⭐ Weeds' });
+    }
+    if (month >= 2 && month <= 4) {
+      lures.push({ icon: '🎣', name: 'Spoon', desc: 'Post-spawn pike are aggressive and shallow. Work weed edges.', tag: '🔥 Spring' });
+    } else if (month >= 8 && month <= 10) {
+      lures.push({ icon: '🐟', name: 'Large Swimbait', desc: 'Pike gorging before winter. Match large baitfish profile.', tag: '🔥 Fall' });
+    } else {
+      lures.push({ icon: '🪝', name: 'Bucktail Spinner', desc: 'Large tandem blade. Cover water fast finding active pike.', tag: '⭐ Search' });
+    }
+    if (isTopwater) lures.unshift({ icon: '🐸', name: 'Large Frog / Glider', desc: 'Pike topwater at dawn is explosive. Use wire leader always.', tag: '🔥 Dawn' });
+
+  } else {
+    // Largemouth (original)
+    if (isTopwater || isDawn) {
+      lures.push({ icon: '🐸', name: 'Frog / Popper', desc: 'Walk the dog over cover. Pause on splashes.', tag: isDawn ? '🔥 Prime time' : '⭐ Top pick' });
+      lures.push({ icon: '🎣', name: 'Buzzbait', desc: 'Steady retrieve along weed edges in low light.', tag: '⭐ Low light' });
+    }
+    if (tempF < 55) {
+      lures.push({ icon: '🐛', name: 'Jig + Craw', desc: 'Slow drag on bottom. Cold bass are lethargic.', tag: '🔥 Cold water' });
+      lures.push({ icon: '🎣', name: 'Swimbait', desc: 'Slow roll at 0.5x normal speed.', tag: '⭐ Pick' });
+    } else if (tempF <= 75) {
+      lures.push({ icon: '🐛', name: 'Senko Worm', desc: 'Texas rig. Dead-stick on the fall. Irresistible.', tag: '🔥 All-day' });
+      lures.push({ icon: '🪝', name: 'Spinnerbait', desc: 'Chartreuse/white blade through structure.', tag: '⭐ Pick' });
+    } else {
+      lures.push({ icon: '🐸', name: 'Punch Rig', desc: 'Heavy weight through thick surface mats.', tag: '🔥 Hot pick' });
+      lures.push({ icon: '🐛', name: 'Ned Rig', desc: 'Finesse bottom. Inactive summer bass eat it.', tag: '⭐ Finesse' });
+    }
+    if (month >= 2 && month <= 4) {
+      lures.push({ icon: '🦞', name: 'Crawfish Crank', desc: 'Deflect off rocks. Spawn bass react hard.', tag: '🔥 Spring' });
+    } else if (month >= 8 && month <= 10) {
+      lures.push({ icon: '🎣', name: 'Lipless Crank', desc: 'Rip through dying grass. Fall bait.', tag: '🔥 Fall' });
+    } else {
+      lures.push({ icon: '🪝', name: 'Carolina Rig', desc: 'Cover deep structure quickly. 10-18ft.', tag: '⭐ Depth' });
+    }
+  }
+
+  return lures.slice(0, 4);
+}
+
+// ── Geolocation ────────────────────────────────────────────────────────────
+function getLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) { reject(new Error('Geolocation not supported')); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      err => reject(err),
+      { timeout: 10000, maximumAge: 60000 }
+    );
+  });
+}
+
+// ── Reverse geocode (Nominatim) ────────────────────────────────────────────
+async function reverseGeocode(lat, lon) {
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`, {
+      headers: { 'Accept-Language': 'en' }
+    });
+    const d = await r.json();
+    return d.address.city || d.address.town || d.address.village || d.address.county || 'Your location';
+  } catch { return 'Your location'; }
+}
+
+// ── Open-Meteo weather ─────────────────────────────────────────────────────
+async function fetchWeather(lat, lon, days = 7) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+    `&current=temperature_2m,wind_speed_10m,surface_pressure,cloud_cover,weather_code` +
+    `&daily=temperature_2m_max,temperature_2m_min,weather_code,wind_speed_10m_max,precipitation_probability_max,surface_pressure_mean` +
+    `&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=${days}&timezone=auto`;
+  const r = await fetch(url);
+  const d = await r.json();
+  const c = d.current;
+
+  // Build daily forecast array
+  const daily = [];
+  if (d.daily) {
+    for (let i = 0; i < d.daily.time.length; i++) {
+      daily.push({
+        date: d.daily.time[i],
+        max_f: Math.round(d.daily.temperature_2m_max[i]),
+        min_f: Math.round(d.daily.temperature_2m_min[i]),
+        weather_code: d.daily.weather_code[i],
+        wind_mph: Math.round(d.daily.wind_speed_10m_max[i]),
+        rain_pct: d.daily.precipitation_probability_max[i],
+        pressure_hpa: Math.round(d.daily.surface_pressure_mean[i]),
+      });
+    }
+  }
+
+  return {
+    temp_f: Math.round(c.temperature_2m),
+    wind_mph: Math.round(c.wind_speed_10m),
+    pressure_hpa: Math.round(c.surface_pressure),
+    cloud_cover: c.cloud_cover,
+    is_overcast: c.cloud_cover > 60,
+    weather_code: c.weather_code,
+    daily,
+  };
+}
+
+// ── Weather code to emoji ──────────────────────────────────────────────────
+function wxEmoji(code) {
+  if (code === 0) return '☀️';
+  if (code <= 2) return '🌤️';
+  if (code <= 3) return '☁️';
+  if (code <= 49) return '🌫️';
+  if (code <= 59) return '🌦️';
+  if (code <= 69) return '🌧️';
+  if (code <= 79) return '🌨️';
+  if (code <= 84) return '🌧️';
+  if (code <= 99) return '⛈️';
+  return '🌡️';
+}
+
+// ── Daily bite score (uses daily avg conditions) ───────────────────────────
+function dailyBiteScore(day, dayIndex) {
+  var date = new Date(day.date + 'T12:00:00');
+  var moon = getMoonPhase(date);
+  var avgTemp = Math.round((day.max_f + day.min_f) / 2);
+  var month = date.getMonth();
+  var sp = currentSpecies || 'largemouth';
+
+  var score = 0.65;
+
+  // Species-specific temperature curves
+  if (sp === 'largemouth') {
+    if (avgTemp >= 62 && avgTemp <= 80) score *= 1.25;
+    else if (avgTemp >= 55 && avgTemp < 62) score *= 1.0;
+    else if (avgTemp > 80 && avgTemp <= 88) score *= 0.9;
+    else if (avgTemp < 50 || avgTemp > 88) score *= 0.6;
+  } else if (sp === 'smallmouth') {
+    // Smallmouth prefer slightly cooler water
+    if (avgTemp >= 58 && avgTemp <= 72) score *= 1.25;
+    else if (avgTemp >= 50 && avgTemp < 58) score *= 1.05;
+    else if (avgTemp > 72 && avgTemp <= 80) score *= 0.9;
+    else if (avgTemp < 45 || avgTemp > 80) score *= 0.6;
+  } else if (sp === 'pike') {
+    // Pike love cold water -- peak 50-65F
+    if (avgTemp >= 48 && avgTemp <= 65) score *= 1.3;
+    else if (avgTemp >= 40 && avgTemp < 48) score *= 1.1;
+    else if (avgTemp > 65 && avgTemp <= 72) score *= 0.85;
+    else if (avgTemp < 38 || avgTemp > 72) score *= 0.55;
+  }
+
+  // Pressure
+  if (day.pressure_hpa > 1018) score *= 1.1;
+  else if (day.pressure_hpa < 1005) score *= 0.8;
+
+  // Wind
+  if (day.wind_mph < 8) score *= 1.1;
+  else if (day.wind_mph > 20) score *= 0.8;
+
+  // Rain
+  if (day.rain_pct > 70) score *= 0.75;
+  else if (day.rain_pct > 20 && day.rain_pct <= 50) score *= 1.05;
+
+  // Season -- species specific
+  var isSpring = month >= 2 && month <= 4;
+  var isFall = month >= 8 && month <= 10;
+  var isWinter = month === 11 || month <= 1;
+  if (sp === 'pike') {
+    // Pike are great in fall and early spring
+    if (isFall) score *= 1.2;
+    if (isSpring && month <= 3) score *= 1.15;
+    if (isWinter) score *= 1.05; // pike still active in cold
+  } else {
+    if (isSpring) score *= 1.15;
+    if (isFall) score *= 1.1;
+    if (isWinter) score *= 0.8;
+  }
+
+  // Moon
+  score *= moon.bite;
+
+  return Math.min(Math.max(score, 0.05), 1.0);
+}
+
+// ── Render week forecast ───────────────────────────────────────────────────
+function renderWeekForecast(daily) {
+  if (!daily || daily.length === 0) {
+    document.getElementById('weekList').innerHTML =
+      '<div style="padding:20px;text-align:center;color:var(--text-muted)">No forecast data available</div>';
+    return;
+  }
+
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const html = daily.map((day, i) => {
+    const date = new Date(day.date + 'T12:00:00');
+    const dayName = i === 0 ? 'Today' : days[date.getDay()];
+    const isToday = day.date === todayStr;
+    const score = dailyBiteScore(day, i);
+    const pct = Math.round(score * 100);
+    const lc = levelClass(score);
+    const fillColor = lc === 'hot' ? 'var(--coral)' : lc === 'good' ? 'var(--green-bright)' : 'var(--gray-300)';
+    const badgeClass = lc === 'hot' ? 'badge-hot' : lc === 'good' ? 'badge-good' : 'badge-slow';
+    const badgeText = lc === 'hot' ? '🔥 Hot' : lc === 'good' ? '✅ Good' : '😴 Slow';
+    const moon = getMoonPhase(date);
+
+    const tip = getDayTip(day, score, date.getMonth());
+
+    return `
+      <div class="day-row${isToday ? ' today' : ''}" onclick="toggleDayDetail(${i})">
+        <span class="day-name">${dayName}</span>
+        <span class="day-icon">${wxEmoji(day.weather_code)}</span>
+        <span class="day-temps"><strong>${day.max_f} degrees</strong> / ${day.min_f} degrees</span>
+        <div class="day-bite-wrap">
+          <div class="day-bite-bar">
+            <div class="day-bite-fill" style="width:${pct}%;background:${fillColor}"></div>
+          </div>
+          <div class="day-bite-label">${pct}% bite rating</div>
+        </div>
+        <span class="day-badge ${badgeClass}">${badgeText}</span>
+      </div>
+      <div class="day-detail" id="detail-${i}">
+        <div class="detail-grid">
+          <div class="detail-cell"><div class="dval">${day.wind_mph} mph</div><div class="dlbl">Wind</div></div>
+          <div class="detail-cell"><div class="dval">${day.rain_pct}%</div><div class="dlbl">Rain chance</div></div>
+          <div class="detail-cell"><div class="dval">${moon.emoji} ${moon.name.split(' ')[0]}</div><div class="dlbl">Moon</div></div>
+        </div>
+        <div class="day-tip">${tip}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('weekList').innerHTML = html;
+}
+
+function getDayTip(day, score, month) {
+  const avgTemp = Math.round((day.max_f + day.min_f) / 2);
+
+  // Score-aligned opening tone
+  let opening = '';
+  if (score >= 0.75) opening = 'Excellent day to be on the water.';
+  else if (score >= 0.55) opening = 'Decent fishing expected.';
+  else opening = 'Tough conditions -- fish are likely inactive.';
+
+  // Primary condition driver -- explains WHY the score is what it is
+  let detail = '';
+  if (day.rain_pct > 70) {
+    opening = score >= 0.55
+      ? 'Rain can turn the bite on -- but heavy rain may push bass deep.'
+      : 'Heavy rain and tough conditions combine for a difficult day.';
+    detail = 'Try slow presentations near bottom structure. Post-front fishing the next day will likely be even tougher.';
+  } else if (day.rain_pct > 30) {
+    detail = score >= 0.55
+      ? 'Light rain reduces light penetration and keeps bass shallower. Good day for topwater along banks.'
+      : 'Even with some rain, other conditions are working against you. Slow down and fish finesse near structure.';
+  } else if (day.wind_mph > 18) {
+    detail = score >= 0.55
+      ? 'Strong winds push baitfish to windward banks -- position to intercept with a spinnerbait or crankbait.'
+      : 'Heavy wind combined with other tough conditions makes presentation difficult. Fish sheltered coves.';
+  } else if (avgTemp < 50) {
+    opening = score >= 0.55 ? 'Cold but fishable.' : 'Cold day -- bass are very sluggish.';
+    detail = 'Use the smallest, slowest presentation you have. Ned rig or drop shot near hard bottom structure.';
+  } else if (avgTemp > 88) {
+    opening = score >= 0.55 ? 'Hot day -- but there are windows.' : 'Heat and tough conditions make for a hard day.';
+    detail = 'Fish early morning and after sunset only. Mid-day bass retreat to 15ft+ depth or heavy shade.';
+  } else if (score >= 0.75) {
+    detail = 'Dawn and dusk windows will be peak -- plan to be on the water for both. Establish a pattern early and repeat it.';
+  } else if (score >= 0.55) {
+    detail = 'Focus on transition banks and structure edges. Run and gun to find active fish then slow down once you do.';
+  } else {
+    detail = 'Downsize your presentation, slow everything down, and target the deepest nearby structure. Finesse tactics only.';
+  }
+
+  return opening + ' ' + detail;
+}
+
+function toggleDayDetail(i) {
+  const el = document.getElementById('detail-' + i);
+  el.classList.toggle('open');
+}
+
+// ── USGS water temp (nearest station) ─────────────────────────────────────
+async function fetchWaterTemp(lat, lon) {
+  try {
+    // parameterCd 00010 = water temp in Celsius
+    const bbox = `${lon-1},${lat-1},${lon+1},${lat+1}`;
+    const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&bbox=${bbox}&parameterCd=00010&siteStatus=active&period=PT2H`;
+    const r = await fetch(url);
+    const d = await r.json();
+    const series = (d && d.value && d.value.timeSeries);
+    if (!series || series.length === 0) return null;
+    // Get the most recent value from the first active station
+    for (const s of series) {
+      const vals = (s.values && s.values[0] && s.values[0].value);
+      if (vals && vals.length > 0) {
+        const latest = vals[vals.length - 1];
+        if (latest.value !== '-999999') {
+          const c = parseFloat(latest.value);
+          const f = Math.round(c * 9/5 + 32);
+          return { f, c: Math.round(c), site: (s.sourceInfo && s.sourceInfo.siteName) || 'USGS Station' };
+        }
+      }
+    }
+    return null;
+  } catch { return null; }
+}
+
+// ── Estimated water temp from air temp (fallback) ─────────────────────────
+function estimateWaterTemp(airF, month) {
+  const lagF = airF - [18,15,10,4,0,-2,0,2,4,8,14,18][month];
+  return Math.round(lagF);
+}
+
+// ── Render helpers ─────────────────────────────────────────────────────────
+function renderTimeline(wx, moon) {
+  const hour = new Date().getHours();
+  const el = document.getElementById('timeline');
+  el.innerHTML = '';
+  let maxScore = 0, maxLabel = '';
+
+  TIME_SLOTS.forEach(slot => {
+    const score = biteScore(slot.hours, wx, moon);
+    const pct = Math.round(score * 100);
+    const lc = levelClass(score);
+    const isNow = hour >= slot.hours[0] && hour < slot.hours[1];
+    if (score > maxScore) { maxScore = score; maxLabel = slot.label; }
+
+    el.innerHTML += `
+      <div class="tslot${isNow ? ' now' : ''}">
+        <span class="tslot-label">${slot.label}</span>
+        <div class="bar-wrap">
+          <div class="bar-fill bar-${lc}" style="height:${pct}%"></div>
+        </div>
+        <span class="tslot-pct">${pct}%</span>
+      </div>`;
+  });
+
+  const curScore = biteScore(TIME_SLOTS.find(s => hour >= s.hours[0] && hour < s.hours[1]) ? (TIME_SLOTS.find(s => hour >= s.hours[0] && hour < s.hours[1])).hours : [12,15], wx, moon);
+  const cls = levelClass(curScore);
+  const badge = document.getElementById('overallBadge');
+  badge.textContent = cls === 'hot' ? '🔥 Hot bite' : cls === 'good' ? '✅ Good bite' : '😴 Slow bite';
+  badge.className = 'bite-badge badge-' + cls;
+}
+
+function renderLures(wx) {
+  const month = new Date().getMonth();
+  const lures = getLures(wx, month);
+  const el = document.getElementById('lureScroll');
+  el.innerHTML = lures.map((l, i) => `
+    <div class="lure-card${i === 0 ? ' top-pick' : ''}" onclick="askStrategy('${l.name}')">
+      <span class="lure-icon">${l.icon}</span>
+      <div class="lure-name">${l.name}</div>
+      <div class="lure-desc">${l.desc}</div>
+      <span class="lure-tag${l.tag.includes('🔥') ? ' tag-hot' : ''}">${l.tag}</span>
+    </div>`).join('');
+}
+
+function renderConditions(wx, moon, waterTemp) {
+  const el = document.getElementById('condGrid');
+  const pressureTrend = wx.pressure_hpa > 1015 ? 'Stable -- good' : wx.pressure_hpa > 1005 ? 'Neutral' : 'Falling -- tough';
+  const skyText = wx.cloud_cover > 70 ? 'Overcast -- great' : wx.cloud_cover > 30 ? 'Partly cloudy' : 'Sunny -- fish deep';
+  const wt = waterTemp ? `${waterTemp.f} degreesF` : `~${estimateWaterTemp(wx.temp_f, new Date().getMonth())} degreesF*`;
+  const wtSub = waterTemp ? waterTemp.site.substring(0, 22) : 'Estimated';
+
+  el.innerHTML = `
+    <div class="cond-card">
+      <div class="cond-icon">🌡️</div>
+      <div class="cond-val">${wx.temp_f} degreesF</div>
+      <div class="cond-lbl">Air Temperature</div>
+      <div class="cond-sub">${wx.temp_f >= 60 && wx.temp_f <= 82 ? 'Prime range' : wx.temp_f < 60 ? 'Fish slow' : 'Fish deep'}</div>
+    </div>
+    <div class="cond-card">
+      <div class="cond-icon">🌊</div>
+      <div class="cond-val">${wt}</div>
+      <div class="cond-lbl">Water Temp</div>
+      <div class="cond-sub" style="font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${wtSub}</div>
+    </div>
+    <div class="cond-card">
+      <div class="cond-icon">📊</div>
+      <div class="cond-val">${wx.pressure_hpa} hPa</div>
+      <div class="cond-lbl">Barometric</div>
+      <div class="cond-sub">${pressureTrend}</div>
+    </div>
+    <div class="cond-card">
+      <div class="cond-icon">${moon.emoji}</div>
+      <div class="cond-val">${moon.name.split(' ')[0]}</div>
+      <div class="cond-lbl">Moon Phase</div>
+      <div class="cond-sub">${moon.bite >= 0.85 ? 'High activity' : moon.bite >= 0.70 ? 'Good activity' : 'Moderate'}</div>
+    </div>
+    <div class="cond-card">
+      <div class="cond-icon">💨</div>
+      <div class="cond-val">${wx.wind_mph} mph</div>
+      <div class="cond-lbl">Wind Speed</div>
+      <div class="cond-sub">${wx.wind_mph < 8 ? 'Calm -- great' : wx.wind_mph < 15 ? 'Light chop' : 'Windy -- tough'}</div>
+    </div>
+    <div class="cond-card">
+      <div class="cond-icon">☁️</div>
+      <div class="cond-val">${wx.cloud_cover}%</div>
+      <div class="cond-lbl">Cloud Cover</div>
+      <div class="cond-sub">${skyText}</div>
+    </div>`;
+}
+
+function renderTips(wx, moon) {
+  const month = new Date().getMonth();
+  const tips = [];
+
+  // Pressure tip
+  if (wx.pressure_hpa > 1018) tips.push({ ico: '📊', title: 'High pressure', text: 'Fish are lethargic near surface. Target structure and bottom at 8-15ft.' });
+  else if (wx.pressure_hpa < 1008) tips.push({ ico: '📊', title: 'Falling pressure', text: 'Tough bite incoming. Fish fast-moving baits now before it drops further.' });
+  else tips.push({ ico: '📊', title: 'Stable pressure', text: 'Good conditions. Establish a pattern early and repeat it.' });
+
+  // Temp tip
+  if (wx.temp_f < 55) tips.push({ ico: '🌡️', title: 'Cold air', text: 'Water is cold -- slow presentations win. Dead-stick finesse rigs near structure.' });
+  else if (wx.temp_f > 85) tips.push({ ico: '🌡️', title: 'Hot day', text: 'Fish pushed deep or under heavy cover. Night fishing and shaded banks are best.' });
+  else tips.push({ ico: '🌡️', title: 'Comfortable temps', text: 'Ideal range. Run and gun -- fish multiple spots to find active fish fast.' });
+
+  // Moon tip
+  if (moon.bite >= 0.85) tips.push({ ico: moon.emoji, title: moon.name, text: 'Peak solunar activity. This is a prime feeding window -- prioritize topwater and reaction baits.' });
+
+  // Species-specific seasonal tips
+  const seasonTipsLargemouth = [
+    'Winter: fish slow and deep. Jig and swimbait near structure.',
+    'Winter: pre-spawn largemouth start moving to transition areas.',
+    'Pre-spawn: largemouth feeding heavily. Target south-facing banks that warm first.',
+    'Spawn: sight fish beds in 1-4ft of water. Use non-threatening finesse baits.',
+    'Post-spawn: largemouth recovering. Fry guarders are aggressive -- use a swimbait.',
+    'Summer: early and late only. Work weed edges and deep structure mid-day.',
+    'Summer: topwater at dawn and dusk. Punch rig mats mid-day.',
+    'Late summer: largemouth schooling on baitfish. Watch for blowups on the surface.',
+    'Fall: feeding frenzy. Match the shad -- white or silver baits, lipless cranks.',
+    'Fall turnover: tough bite for 1-2 weeks. Fish deeper once lake stabilizes.',
+    'Pre-winter: last big feed. Carolina rig and swimbaits 10-20ft.',
+    'Early winter: slow down everything. Drop shot and Ned rig near channel edges.',
+  ];
+  const seasonTipsSmallmouth = [
+    'Winter: smallmouth in deep clear water. Drop shot and blade baits 20-40ft.',
+    'Winter: smallmouth moving shallower on warm days. Ned rig on rock transitions.',
+    'Pre-spawn: smallmouth on gravel and rock points 8-15ft. Tube bait and crankbait.',
+    'Spawn: smallmouth bed on gravel 3-8ft. Finesse tube or drop shot near beds.',
+    'Post-spawn: smallmouth scattered and aggressive. Swimbait and topwater on points.',
+    'Summer: smallmouth deep on main lake structure mid-day. Ned rig and drop shot.',
+    'Summer: smallmouth on current breaks in rivers. Inline spinner and tube bait.',
+    'Late summer: smallmouth schooling on points chasing shad. Swimbait and topwater.',
+    'Fall: best time of year for smallmouth. They pack on feeding and hit hard.',
+    'Fall: smallmouth on shallow rock flats warming in afternoon sun. Crankbait.',
+    'Pre-winter: smallmouth moving to deep wintering holes. Blade bait and jigging spoon.',
+    'Early winter: small mouth suspended over deep structure. Finesse drop shot only.',
+  ];
+  const seasonTipsPike = [
+    'Winter: pike active under ice on flats near deep water. Large jigs and spoons.',
+    'Winter: pike moving to shallower bays. Large swimbaits and spoons near weeds.',
+    'Pre-spawn: pike most aggressive of the year. Large reaction baits in shallow bays.',
+    'Spawn: pike spawning in shallow bays. Leave them be or fish edges carefully.',
+    'Post-spawn: pike recovering in shallow weeds. Spoons and large swimbaits.',
+    'Summer: pike in cabbage weeds 6-14ft. Weedless spoon and large frog.',
+    'Summer: pike lethargic mid-day. Fish shaded weed edges at dawn and dusk.',
+    'Late summer: pike in deep weed edges chasing large perch. Big swimbait.',
+    'Fall: pike feeding aggressively before winter. Best big pike season of the year.',
+    'Fall: pike shallow on rock and weed transitions. Large jerkbaits and spoons.',
+    'Pre-winter: pike in last green weeds. Large swimbaits and live bait rigs.',
+    'Early winter: pike near deep weed edges. Large jigging spoons and blade baits.',
+  ];
+
+  const seasonTips = currentSpecies === 'smallmouth' ? seasonTipsSmallmouth
+    : currentSpecies === 'pike' ? seasonTipsPike
+    : seasonTipsLargemouth;
+
+  tips.push({ ico: '📅', title: 'Seasonal tip', text: seasonTips[month] });
+
+  // Species-specific bonus tip
+  if (currentSpecies === 'smallmouth') {
+    tips.push({ ico: '🪨', title: 'Smallmouth key', text: 'Smallmouth are structure fish. Rock, gravel, current breaks, and hard bottom out-produce everything else. If you are not feeling the bottom, you are not in the zone.' });
+  } else if (currentSpecies === 'pike') {
+    tips.push({ ico: '⚠️', title: 'Wire leader required', text: 'Always use a wire or fluorocarbon leader of at least 12 inches. Pike teeth will cut mono and fluorocarbon under 40lb instantly. Titanium wire is the most reliable.' });
+  } else {
+    tips.push({ ico: '🎯', title: 'Largemouth key', text: 'Largemouth live in cover. The fish that just ate is sitting within 3 feet of something. If you are not getting snagged occasionally, you are not fishing tight enough to cover.' });
+  }
+
+  document.getElementById('tipList').innerHTML = tips.map(t => `
+    <div class="tip-row">
+      <span class="tip-ico">${t.ico}</span>
+      <div class="tip-body">
+        <div class="tip-title">${t.title}</div>
+        <div class="tip-text">${t.text}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Status chips ───────────────────────────────────────────────────────────
+function renderStatusBar(wx, moon, waterTemp) {
+  document.getElementById('scTemp').textContent = wx.temp_f + ' degreesF';
+  document.getElementById('scPressure').textContent = wx.pressure_hpa + ' hPa';
+  document.getElementById('scWind').textContent = wx.wind_mph + ' mph';
+  document.getElementById('scMoon').textContent = moon.emoji + ' ' + moon.name.split(' ')[0];
+  const wt = waterTemp ? waterTemp.f + ' degreesF' : '~' + estimateWaterTemp(wx.temp_f, new Date().getMonth()) + ' degreesF';
+  document.getElementById('scWaterTemp').textContent = wt;
+}
+
+// ── Catch log ──────────────────────────────────────────────────────────────
+// ── Location name cache ────────────────────────────────────────────────────
+const locationCache = {};
+
+async function getLocationName(lat, lon) {
+  if (!lat || !lon) return null;
+  const key = lat.toFixed(3) + ',' + lon.toFixed(3);
+  if (locationCache[key]) return locationCache[key];
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=14`, {
+      headers: { 'Accept-Language': 'en' }
+    });
+    const d = await r.json();
+    const name = d.address.lake || d.address.reservoir || d.address.river ||
+                 d.address.water || d.address.waterway ||
+                 d.address.park || d.address.nature_reserve ||
+                 d.address.suburb || d.address.village ||
+                 d.address.town || d.address.city || 'Unknown location';
+    locationCache[key] = name;
+    return name;
+  } catch { return null; }
+}
+
+function renderCatches() {
+  const el = document.getElementById('catchList');
+  if (catches.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:14px;">No catches logged yet. Log your first bass!</div>';
+    return;
+  }
+  el.innerHTML = catches.slice().reverse().map((c, ri) => {
+    const i = catches.length - 1 - ri;
+    const hasLoc = c.lat && c.lon;
+    return `<div class="catch-item">
+      <div class="catch-info">
+        <div class="catch-weight">${c.weight ? c.weight + ' lbs' : '?'} ${c.length ? '· ' + c.length + '"' : ''}</div>
+        <div class="catch-meta">${c.lure || 'Unknown lure'} · ${c.date}</div>
+        ${hasLoc ? '<div class="catch-location loading" id="loc-' + i + '">📍 Loading location...</div>' : ''}
+        ${c.notes ? '<div class="catch-meta" style="color:var(--text-muted)">' + c.notes + '</div>' : ''}
+      </div>
+      <button class="catch-del" onclick="deleteCatch(${i})">✕</button>
+    </div>`;
+  }).join('');
+
+  // Async fill location names
+  catches.slice().reverse().forEach((c, ri) => {
+    const i = catches.length - 1 - ri;
+    if (c.lat && c.lon) {
+      getLocationName(c.lat, c.lon).then(name => {
+        const el = document.getElementById('loc-' + i);
+        if (el && name) { el.textContent = '📍 ' + name; el.classList.remove('loading'); }
+        else if (el) { el.style.display = 'none'; }
+      });
+    }
+  });
+}
+
+function openLogModal() { document.getElementById('logModal').classList.add('open'); }
+function closeLogModal() { document.getElementById('logModal').classList.remove('open'); }
+
+function saveCatch() {
+  const weight = document.getElementById('catchWeight').value;
+  const length = document.getElementById('catchLength').value;
+  const lure = document.getElementById('catchLure').value;
+  const notes = document.getElementById('catchNotes').value;
+  const now = new Date();
+  const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  catches.push({ weight, length, lure, notes, date, lat, lon });
+  localStorage.setItem('fishAICatches', JSON.stringify(catches));
+  closeLogModal();
+  renderCatches();
+  ['catchWeight','catchLength','catchLure','catchNotes'].forEach(id => document.getElementById(id).value = '');
+}
+
+function deleteCatch(i) {
+  catches.splice(i, 1);
+  localStorage.setItem('fishAICatches', JSON.stringify(catches));
+  renderCatches();
+}
+
+// ── Skill level ───────────────────────────────────────────────────────────
+function setSkill(level) {
+  skillLevel = level;
+  if (weatherData && currentMoon) renderStrategy(weatherData, currentMoon);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// STRATEGY ENGINE -- rule-based AI lure + technique advisor
+// Covers 200+ condition combinations across temp, pressure, moon,
+// time of day, season, wind, cloud cover, and water type.
+// ══════════════════════════════════════════════════════════════════════════
+
+// Heavy data deferred -- browser renders UI first, then parses lure data
+let _LURE_DB = null, _LURE_DETAILS = null;
+let _lureDataReady = false;
+function getLureDB() { return _LURE_DB || []; }
+function getLureDetailsDB() { return _LURE_DETAILS || {}; }
+
+_LURE_DB = [
+  {
+    id: 'topwater_frog',
+    icon: '🐸', name: 'Hollow Body Frog',
+    color: function(c) { return c.clarity === 'muddy' ? 'Black (most visible)' : 'Black or white'; },
+    size: '3/8 to 1/2 oz',
+    retrieve: 'Walk the dog -- twitch, twitch, pause 2 sec',
+    depth: 'Surface over mats and pads',
+    score: function(c) {
+      let s = 0;
+      if (c.isLowLight) s += 35;
+      if (c.cloudCover > 50) s += 10;
+      if ((c.waterTempF || c.tempF) >= 65 && (c.waterTempF || c.tempF) <= 88) s += 15;
+      if (c.windMph < 12) s += 10;
+      if (c.month >= 4 && c.month <= 8) s += 15;
+      if (c.hasGrass) s += 20;
+      if (c.isShallow) s += 10;
+      if (c.pressure > 1012) s += 5;
+      return s;
+    },
+    why: function(c) { return '' + (c.hasGrass ? 'Grass mats and pads are perfect frog territory -- ' : '') + '' + (c.isLowLight ? 'Low light' : 'Current conditions') + ' push bass up to hunt the surface. Walk it over any cover and pause hard on blowups before setting the hook.'; }
+  },
+  {
+    id: 'senko_wacky',
+    icon: '🐛', name: 'Senko Worm -- Wacky Rig',
+    color: function(c) { return c.clarity === 'clear' ? 'Green pumpkin or watermelon' : c.clarity === 'muddy' ? 'Black blue or junebug' : 'Watermelon red or green pumpkin'; },
+    size: '5 inch',
+    retrieve: 'Cast and do nothing -- let it sink on a slack line',
+    depth: function(c) { return c.depth ? (Math.min(c.depth, 10) + 'ft along structure edges') : '2 to 10ft along any visible structure'; },
+    score: function(c) {
+      let s = 0;
+      const wt = c.waterTempF || c.tempF;
+      if (wt >= 55 && wt <= 80) s += 25;
+      if (c.pressure >= 1010 && c.pressure <= 1022) s += 15;
+      if (c.windMph < 10) s += 10;
+      if (c.month >= 2 && c.month <= 9) s += 10;
+      if (!c.isLowLight) s += 10;
+      if (c.moon >= 0.7) s += 10;
+      if (c.hasDock || c.hasWood) s += 15;
+      if (c.clarity === 'clear') s += 10;
+      return s;
+    },
+    why: function(c) { return '' + (c.hasDock ? 'Docks and wood structure are perfect for a wacky rig -- ' : '') + '' + (c.clarity === 'clear' ? 'Clear water means bass can spot the natural fall from a distance. ' : '') + 'The wacky rig is the most versatile finesse bait in the box -- nearly impossible to fish wrong.'; }
+  },
+  {
+    id: 'spinnerbait',
+    icon: '🪝', name: 'Spinnerbait',
+    color: function(c) { return c.clarity === 'muddy' ? 'Chartreuse and white (maximum flash)' : c.cloudCover > 50 ? 'Chartreuse and white' : 'Sexy shad or natural'; },
+    size: '3/8 to 1/2 oz',
+    retrieve: 'Slow roll just above bottom or burn through mid-column',
+    depth: '4 to 12ft, deflect off any structure',
+    score: function(c) {
+      let s = 0;
+      if (c.windMph >= 8 && c.windMph <= 20) s += 20;
+      if (c.cloudCover > 40) s += 15;
+      const wt = c.waterTempF || c.tempF;
+      if (wt >= 58 && wt <= 82) s += 15;
+      if (c.pressure >= 1008 && c.pressure <= 1020) s += 10;
+      if (c.month >= 1 && c.month <= 9) s += 10;
+      if (c.isLowLight) s += 10;
+      if (c.clarity === 'muddy' || c.clarity === 'stained') s += 15;
+      if (c.hasGrass || c.hasWood) s += 10;
+      return s;
+    },
+    why: function(c) { return '' + (c.clarity === 'muddy' ? 'Muddy water -- go chartreuse for maximum visibility. ' : c.clarity === 'stained' ? 'Stained water -- the flash and vibration help bass locate the bait. ' : '') + '' + (c.windMph >= 8 ? 'Wind chop breaks up surface light, keeping fish aggressive. ' : '') + 'Slow roll it and let it deflect off anything it touches.'; }
+  },
+  {
+    id: 'jig_craw',
+    icon: '🦞', name: 'Football Jig + Craw Trailer',
+    color: function(c) { return c.clarity === 'clear' ? 'Green pumpkin or brown' : c.clarity === 'muddy' ? 'Black blue (silhouette)' : 'Black blue or green pumpkin'; },
+    size: function(c) { return (c.waterTempF || c.tempF) < 55 ? '3/8 oz -- go lighter in cold' : '1/2 to 3/4 oz'; },
+    retrieve: 'Drag slowly along bottom, lift and drop over structure',
+    depth: function(c) { return c.depth && c.depth > 8 ? (c.depth + 'ft -- you are already in the zone') : '8 to 20ft on hard bottom and points'; },
+    score: function(c) {
+      let s = 0;
+      const wt = c.waterTempF || c.tempF;
+      if (wt < 62) s += 30;
+      if (c.pressure > 1015) s += 20;
+      if (c.month >= 8 || c.month <= 2) s += 15;
+      if (c.windMph > 10) s += 10;
+      if (c.hasRock) s += 20;
+      if (c.isDeep) s += 20;
+      if (!c.isLowLight) s += 5;
+      return s;
+    },
+    why: function(c) { return '' + (c.hasRock ? 'Rock structure is prime jig territory -- crawfish live there. ' : '') + '' + (c.isDeep ? 'Fishing deep is perfect for a football jig. ' : '') + '' + ((c.waterTempF || c.tempF) < 62 ? 'Cold water means drag it painfully slow. ' : 'Drag slowly and feel for the bottom composition change.') + ''; }
+  },
+  {
+    id: 'ned_rig',
+    icon: '🪱', name: 'Ned Rig',
+    color: 'Green pumpkin, brown, or natural',
+    size: '2.75 to 3.5 inch mushroom head, 1/6 to 1/4 oz',
+    retrieve: 'Drag on bottom, tiny hops, long pauses -- go slower than feels right',
+    depth: '6 to 18ft on any hard bottom',
+    score: function(c) {
+      let s = 0;
+      if (c.pressure > 1018) s += 25;
+      if (c.tempF < 58 || c.tempF > 86) s += 20;
+      if (c.month >= 5 && c.month <= 8 && !c.isLowLight) s += 15;
+      if (c.windMph < 8) s += 10;
+      return s;
+    },
+    why: function(c) { return '' + (c.pressure > 1018 ? 'High bluebird pressure' : c.tempF > 86 ? 'Summer heat' : 'Tough conditions') + ' make bass inactive and finicky. The Ned rig is the ultimate neutral-fish bait -- the buoyant tail stands up on the bottom and waves at them until they can not stand it anymore.'; }
+  },
+  {
+    id: 'lipless_crank',
+    icon: '🎣', name: 'Lipless Crankbait',
+    color: function(c) { return c.tempF > 65 ? 'Red or chrome shad' : 'Crawfish red or gold'; },
+    size: '1/2 to 3/4 oz',
+    retrieve: 'Rip through grass -- let it sink, snap the rod up, let it fall again',
+    depth: '3 to 8ft, rip through dying or sparse grass',
+    score: function(c) {
+      let s = 0;
+      if (c.month >= 8 && c.month <= 10) s += 35;
+      if (c.month >= 1 && c.month <= 2) s += 20;
+      if (c.windMph > 8) s += 15;
+      if (c.tempF >= 48 && c.tempF <= 72) s += 15;
+      if (c.isLowLight) s += 5;
+      return s;
+    },
+    why: function(c) { return '' + (c.month >= 8 && c.month <= 10 ? 'Fall is the best time of year for lipless cranks -- ' : '') + 'Bass are keying on dying grass edges and shad schools. Rip it hard through any vegetation contact. The erratic action triggers reaction strikes from fish that are not even hungry.'; }
+  },
+  {
+    id: 'swimbait',
+    icon: '🐟', name: 'Paddle Tail Swimbait',
+    color: function(c) { return c.cloudCover > 50 ? 'White or chartreuse' : 'Shad or bluegill match'; },
+    size: '3.8 to 5 inch on 1/4 to 1/2 oz head',
+    retrieve: 'Slow steady roll -- just fast enough to feel the tail kick',
+    depth: '4 to 15ft, match to where bait is showing',
+    score: function(c) {
+      let s = 0;
+      if (c.tempF >= 58 && c.tempF <= 78) s += 20;
+      if (c.month >= 2 && c.month <= 5) s += 20;
+      if (c.month >= 8 && c.month <= 10) s += 15;
+      if (c.pressure >= 1005 && c.pressure <= 1020) s += 10;
+      if (c.windMph >= 5 && c.windMph <= 15) s += 10;
+      if (c.isLowLight) s += 10;
+      return s;
+    },
+    why: function(c) { return '' + (c.month >= 2 && c.month <= 5 ? 'Pre-spawn bass are chasing big meals -- ' : '') + 'A slow-rolled swimbait matches the profile and action of the shad and bluegill bass are actively hunting. Vary the depth until you find where they are holding.'; }
+  },
+  {
+    id: 'buzzbait',
+    icon: '💦', name: 'Buzzbait',
+    color: 'Black or white',
+    size: '3/8 oz',
+    retrieve: 'Cast past cover, reel fast enough to keep it on top, do not stop',
+    depth: 'Surface -- over shallow flats and along weed edges',
+    score: function(c) {
+      let s = 0;
+      if (c.isLowLight) s += 40;
+      if (c.windMph < 8) s += 15;
+      if (c.tempF >= 62 && c.tempF <= 86) s += 15;
+      if (c.month >= 4 && c.month <= 9) s += 10;
+      if (c.cloudCover > 60) s += 10;
+      return s;
+    },
+    why: function(c) { return 'Dawn or dusk with calm wind is buzzbait prime time. The clattering blade creates a disturbance bass can not ignore. Keep the rod tip high, keep reeling reeling, and wait until you feel the fish before setting the hook.'; }
+  },
+  {
+    id: 'carolina_rig',
+    icon: '🪝', name: 'Carolina Rig',
+    color: 'Green pumpkin or watermelon red',
+    size: '1 oz sinker, 18 inch leader, 4 inch lizard or creature bait',
+    retrieve: 'Drag slowly, sweep 3 feet, reel up slack, repeat',
+    depth: '10 to 20ft on points, humps, and channel edges',
+    score: function(c) {
+      let s = 0;
+      if (c.pressure > 1016) s += 20;
+      if (c.tempF > 82 && !c.isLowLight) s += 20;
+      if (c.month >= 5 && c.month <= 8) s += 15;
+      if (c.windMph > 12) s += 10;
+      if (c.month >= 2 && c.month <= 4) s += 10;
+      return s;
+    },
+    why: function(c) { return '' + (c.pressure > 1016 ? 'Stable high pressure' : 'Current conditions') + ' push bass to deeper structure. The Carolina rig covers water efficiently and keeps a natural bait in the strike zone longer than almost any other presentation.'; }
+  },
+  {
+    id: 'drop_shot',
+    icon: '🎯', name: 'Drop Shot',
+    color: 'Green pumpkin or morning dawn',
+    size: '1/4 oz weight, 4 to 6 inch finesse worm, 12 to 18 inch leader',
+    retrieve: 'Hold still and shake the rod tip -- minimal movement',
+    depth: '10 to 25ft suspended over structure or on steep banks',
+    score: function(c) {
+      let s = 0;
+      if (c.pressure > 1020) s += 25;
+      if (c.tempF > 85 && !c.isLowLight) s += 20;
+      if (c.month >= 6 && c.month <= 8) s += 15;
+      if (c.windMph < 6) s += 10;
+      return s;
+    },
+    why: function(c) { return '' + (c.pressure > 1020 ? 'Very high pressure has bass glued to the bottom' : 'Tough mid-day conditions') + '. A drop shot keeps your bait hovering right at their eye level with zero effort required from the fish. Shake it and trust it.'; }
+  },
+];
+
+function buildConditionContext(wx, moon) {
+  const hour = new Date().getHours();
+  const month = new Date().getMonth();
+
+  const waterTempF = userWaterTemp || estimateWaterTemp(wx.temp_f, month);
+  const depth = userDepth || null;
+  const clarity = userClarity || 'stained';
+  const structure = userStructure || [];
+
+  return {
+    tempF: wx.temp_f,
+    waterTempF,
+    pressure: wx.pressure_hpa,
+    windMph: wx.wind_mph,
+    cloudCover: wx.cloud_cover,
+    isLowLight: hour < 8 || hour > 18,
+    isDawn: hour < 7 || hour > 19,
+    isMidDay: hour >= 11 && hour <= 14,
+    moon: moon.bite,
+    moonName: moon.name,
+    month,
+    clarity,
+    depth,
+    structure,
+    hasGrass: structure.includes('Grass') || structure.includes('Pads'),
+    hasDock: structure.includes('Dock'),
+    hasRock: structure.includes('Rock'),
+    hasWood: structure.includes('Wood'),
+    isDeep: structure.includes('Deep') || (depth && depth > 12),
+    isShallow: depth && depth < 6,
+    isOpenWater: structure.includes('Open water'),
+    season: month >= 2 && month <= 4 ? 'spring' : month >= 5 && month <= 7 ? 'summer' : month >= 8 && month <= 10 ? 'fall' : 'winter',
+  };
+}
+
+function scoreAllLures(c) {
+  return (_LURE_DB || []).map(function(l) {
+    var scored = {};
+    var keys = Object.keys(l);
+    for (var i = 0; i < keys.length; i++) { scored[keys[i]] = l[keys[i]]; }
+    scored.finalScore = l.score(c);
+    scored.resolvedColor = typeof l.color === 'function' ? l.color(c) : l.color;
+    scored.resolvedSize = typeof l.size === 'function' ? l.size(c) : l.size;
+    return scored;
+  }).sort(function(a, b) { return b.finalScore - a.finalScore; });
+}
+
+function confidenceLabel(score) {
+  if (score >= 70) return { text: 'Top pick', pct: Math.min(99, score) };
+  if (score >= 50) return { text: 'Strong', pct: Math.min(95, score) };
+  if (score >= 35) return { text: 'Good', pct: Math.min(85, score) };
+  return { text: 'Try it', pct: Math.min(70, score) };
+}
+
+function getSkillContent(top, alts, c, conf, why) {
+  if (skillLevel === 'beginner') {
+    const simpleRetrieve = top.retrieve.split('--')[0].trim();
+    var depthStr = typeof top.depth === 'function' ? top.depth(c) : top.depth;
+    const simpleDepth = depthStr.split(',')[0].trim();
+    return {
+      retrieve: simpleRetrieve,
+      depth: simpleDepth,
+      why: why.split('.')[0] + '. Keep it slow and steady.',
+      altCount: 2,
+      showSize: false,
+      headerNote: 'Great starting point',
+    };
+  } else if (skillLevel === 'notbiting') {
+    const next = alts[0];
+    const nextColor = typeof next.color === 'function' ? next.color(c) : next.color;
+    const nextSize = typeof next.size === 'function' ? next.size(c) : next.size;
+    const nextWhy = next.why(c);
+    return {
+      _overrideLure: next,
+      _overrideColor: nextColor,
+      _overrideSize: nextSize,
+      retrieve: next.retrieve,
+      depth: typeof next.depth === 'function' ? next.depth(c) : next.depth,
+      why: "Top pick not producing -- switching to next best. " + nextWhy.replace(/^tough conditions[^.]*\.\s*/i, '').replace(/^inactive[^.]*\.\s*/i, '') + " If this does not work either, slow your presentation by 50% or move to completely different structure.",
+      altCount: 2,
+      showSize: true,
+      headerNote: 'Switched -- top pick dismissed',
+    };
+  } else {
+    return {
+      retrieve: top.retrieve,
+      depth: typeof top.depth === 'function' ? top.depth(c) : top.depth,
+      why,
+      altCount: 3,
+      showSize: true,
+      headerNote: conf.text + ' pick for conditions',
+    };
+  }
+}
+
+function renderStrategy(wx, moon) {
+  const c = buildConditionContext(wx, moon);
+  const ranked = scoreAllLures(c);
+  const top = ranked[0];
+  const alts = ranked.slice(1, 4);
+  const conf = confidenceLabel(top.finalScore);
+
+  const hour = new Date().getHours();
+  const currentSlot = TIME_SLOTS.find(s => hour >= s.hours[0] && hour < s.hours[1]) || TIME_SLOTS[2];
+  const overallBite = biteScore(currentSlot.hours, wx, moon);
+  const biteLevel = overallBite >= 0.70 ? 'hot' : overallBite >= 0.45 ? 'good' : 'slow';
+
+  const tonePrefix = biteLevel === 'hot'
+    ? 'Conditions are firing right now. '
+    : biteLevel === 'good'
+    ? 'Conditions are reasonable. '
+    : 'Tough bite window -- stay patient. ';
+
+  const rawWhy = top.why(c);
+  const why = tonePrefix + rawWhy
+    .replace(/^tough conditions[^.]*\.\s*/i, '')
+    .replace(/^inactive[^.]*\.\s*/i, '')
+    .replace(/^bass are lethargic[^.]*\.\s*/i, biteLevel === 'slow' ? 'Bass are lethargic. ' : '');
+
+  const sk = getSkillContent(top, alts, c, conf, why);
+  const timeOfDay = c.isDawn ? 'Dawn / Dusk' : c.isLowLight ? 'Low light' : c.isMidDay ? 'Mid-day' : 'Active period';
+  const seasonLabel = { spring: 'Spawn season', summer: 'Summer', fall: 'Fall feed-up', winter: 'Winter' }[c.season];
+  const waterTempLabel = c.waterTempF ? c.waterTempF + ' degreesF' : 'Estimated';
+  const clarityLabel = { clear: '🔵 Clear', stained: '🟡 Stained', muddy: '🟤 Muddy' }[c.clarity] || 'Stained';
+  const structureLabel = c.structure && c.structure.length ? c.structure.join(', ') : 'General';
+
+  const html = `
+    <div class="strategy-header">
+      <span class="strategy-title">Your Strategy</span>
+      <span class="strategy-rating">${sk.headerNote}</span>
+    </div>
+    <div class="strategy-lure-row">
+      <span class="strategy-lure-icon">${sk._overrideLure ? sk._overrideLure.icon : top.icon}</span>
+      <div>
+        <div class="strategy-lure-name">${sk._overrideLure ? sk._overrideLure.name : top.name}</div>
+        <div class="strategy-lure-sub">${sk._overrideLure ? sk._overrideColor : top.resolvedColor}${sk.showSize ? ' · ' + (sk._overrideLure ? sk._overrideSize : top.resolvedSize) : ''}</div>
+      </div>
+    </div>
+    <div class="strategy-grid">
+      <div class="strategy-cell">
+        <div class="strategy-cell-label">Retrieve</div>
+        <div class="strategy-cell-val">${sk.retrieve}</div>
+      </div>
+      <div class="strategy-cell">
+        <div class="strategy-cell-label">Depth</div>
+        <div class="strategy-cell-val">${typeof sk.depth === 'function' ? sk.depth(c) : sk.depth}</div>
+      </div>
+      <div class="strategy-cell">
+        <div class="strategy-cell-label">Time</div>
+        <div class="strategy-cell-val">${timeOfDay}</div>
+      </div>
+      <div class="strategy-cell">
+        <div class="strategy-cell-label">Season</div>
+        <div class="strategy-cell-val">${seasonLabel}</div>
+      </div>
+    </div>
+    <div class="strategy-reasoning">${sk.why}</div>
+    <div class="strategy-alts">
+      <div class="strategy-alts-title">Also worth trying</div>
+      ${(skillLevel === 'notbiting' ? alts.slice(1, sk.altCount + 1) : alts.slice(0, sk.altCount)).map(a => {
+        const ac = confidenceLabel(a.finalScore);
+        return `<div class="alt-row">
+          <span class="alt-icon">${a.icon}</span>
+          <div class="alt-info">
+            <div class="alt-name">${a.name}</div>
+            <div class="alt-desc">${typeof a.color === 'function' ? a.color(c) : a.color}${sk.showSize ? ' · ' + (typeof a.size === 'function' ? a.size(c) : a.size) : ''}</div>
+          </div>
+          <span class="alt-conf">${ac.text}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="skill-row">
+      <button class="skill-btn ${skillLevel === 'beginner' ? 'active' : ''}" onclick="setSkill('beginner')">Beginner</button>
+      <button class="skill-btn ${skillLevel === 'intermediate' ? 'active' : ''}" onclick="setSkill('intermediate')">Intermediate</button>
+      <button class="skill-btn ${skillLevel === 'notbiting' ? 'active' : ''}" onclick="setSkill('notbiting')">Not Biting</button>
+    </div>
+    <div class="skill-label">Tap to adjust · Not Biting removes the top pick and tries next best</div>
+  `;
+
+  document.getElementById('strategyCard').innerHTML = html;
+  if (window.Android) {
+    var speciesLabel = currentSpecies === 'smallmouth' ? 'Smallmouth' : currentSpecies === 'pike' ? 'N. Pike' : 'Largemouth';
+    var topLureName = ranked && ranked[0] ? ranked[0].name : '';
+    var pressureTrend = wx && wx.pressure_hpa > 1015 ? 'Pressure rising' : wx && wx.pressure_hpa < 1005 ? 'Pressure falling' : 'Pressure stable';
+    if (window.Android.saveBiteData) {
+      window.Android.saveBiteData(String(conf.pct), conf.text, speciesLabel, topLureName, pressureTrend, overallBite);
+    } else if (window.Android.saveBitePctWithSpecies) {
+      window.Android.saveBitePctWithSpecies(String(conf.pct), conf.text, speciesLabel);
+    } else {
+      window.Android.saveBitePct(String(conf.pct), conf.text);
+    }
+  }
+}
+
+var currentSpecies = null || 'largemouth';
+
+function setSpecies(sp) {
+  currentSpecies = sp;
+  ['largemouth','smallmouth','pike'].forEach(function(s) {
+    var btn = document.getElementById('sp' + s.charAt(0).toUpperCase() + s.slice(1));
+    if (btn) {
+      if (s === sp) { btn.classList.add('active'); } else { btn.classList.remove('active'); }
+    }
+  });
+  if (weatherData && currentMoon) {
+    renderTimeline(weatherData, currentMoon);
+    renderLures(weatherData);
+    renderStrategy(weatherData, currentMoon);
+    renderTips(weatherData, currentMoon);
+    if (weatherData.daily && weatherData.daily.length > 0) {
+      renderWeekForecast(weatherData.daily);
+    }
+  }
+}
+
+function restoreSpecies() {
+  const btn = document.getElementById('sp' + currentSpecies.charAt(0).toUpperCase() + currentSpecies.slice(1));
+  if (btn) {
+    document.querySelectorAll('.species-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  // Re-render 7-day forecast with species-specific scores
+  if (weatherData && weatherData.daily && weatherData.daily.length > 0) {
+    renderWeekForecast(weatherData.daily);
+  }
+}
+
+let userWaterTemp = null;
+let userDepth = null;
+let userClarity = 'stained';
+let userStructure = [];
+
+function toggleWaterPanel() {
+  const body = document.getElementById('waterPanelBody');
+  const arrow = document.getElementById('waterPanelArrow');
+  const header = document.getElementById('waterPanelHeader');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  arrow.classList.toggle('open', !isOpen);
+  header.classList.toggle('open', !isOpen);
+}
+
+function selectClarity(val) {
+  userClarity = val;
+  ['clear','stained','muddy'].forEach(c => {
+    document.getElementById('clarity' + c.charAt(0).toUpperCase() + c.slice(1))
+      .classList.toggle('selected', c === val);
+  });
+  updateConditionsSummary();
+}
+
+function toggleStructure(val) {
+  const idx = userStructure.indexOf(val);
+  if (idx === -1) userStructure.push(val);
+  else userStructure.splice(idx, 1);
+  document.querySelectorAll('.structure-chip').forEach(btn => {
+    btn.classList.toggle('selected', userStructure.includes(btn.textContent.trim().replace(/^.+ /, '')));
+  });
+  updateConditionsSummary();
+}
+
+function updateConditionsSummary() {
+  userWaterTemp = parseFloat(document.getElementById('inputWaterTemp').value) || null;
+  userDepth = parseFloat(document.getElementById('inputDepth').value) || null;
+}
+
+function applyWaterConditions() {
+  updateConditionsSummary();
+
+  const pills = [];
+  if (userWaterTemp) pills.push(userWaterTemp + ' degreesF water');
+  if (userDepth) pills.push(userDepth + 'ft depth');
+  pills.push(userClarity + ' water');
+  if (userStructure.length) pills.push(userStructure.join(', '));
+
+  document.getElementById('conditionsSummary').innerHTML =
+    pills.map(p => `<span class="cond-pill">${p}</span>`).join('');
+
+  document.getElementById('waterPanelSub').textContent =
+    'Updated -- ' + pills.slice(0, 2).join(', ');
+
+  document.getElementById('waterPanelBody').classList.remove('open');
+  document.getElementById('waterPanelArrow').classList.remove('open');
+  document.getElementById('waterPanelHeader').classList.remove('open');
+
+  if (weatherData && currentMoon) renderStrategy(weatherData, currentMoon);
+}
+
+function switchTab(tab) {
+  const isToday = tab === 'today';
+  document.getElementById('viewToday').style.display = isToday ? 'block' : 'none';
+  document.getElementById('viewWeek').style.display = isToday ? 'none' : 'block';
+  document.getElementById('tabToday').classList.toggle('active', isToday);
+  document.getElementById('tabWeek').classList.toggle('active', !isToday);
+}
+
+let leafletLoaded = false;
+let mapInstance = null;
+
+function loadLeaflet(cb) {
+  if (leafletLoaded) { cb(); return; }
+  const css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+  document.head.appendChild(css);
+  const js = document.createElement('script');
+  js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+  js.onload = () => { leafletLoaded = true; cb(); };
+  document.head.appendChild(js);
+}
+
+function renderMap() {
+  const container = document.getElementById('mapContainer');
+  const withCoords = catches.filter(c => c.lat && c.lon);
+
+  document.getElementById('mapSubtitle').textContent =
+    withCoords.length === 0 ? 'No geotagged catches yet'
+    : withCoords.length + ' catch' + (withCoords.length !== 1 ? 'es' : '') + ' logged';
+
+  if (withCoords.length === 0) {
+    container.innerHTML = '<div class="map-empty">🎣<br><br>No geotagged catches yet.<br>Log a catch on the water to see your spots here.</div>';
+    return;
+  }
+
+  container.innerHTML = '<div id="map"></div>';
+
+  loadLeaflet(() => {
+    if (mapInstance) { mapInstance.remove(); mapInstance = null; }
+
+    const centerLat = withCoords.reduce((s, c) => s + c.lat, 0) / withCoords.length;
+    const centerLon = withCoords.reduce((s, c) => s + c.lon, 0) / withCoords.length;
+
+    mapInstance = L.map('map', { zoomControl: true, attributionControl: false })
+      .setView([centerLat, centerLon], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+    }).addTo(mapInstance);
+
+    const icon = L.divIcon({
+      html: '<div style="background:#0F6E56;width:16px;height:16px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>',
+      className: '',
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+      popupAnchor: [0, -10],
+    });
+
+    withCoords.forEach(c => {
+      const weight = c.weight ? c.weight + ' lbs' : '?';
+      const length = c.length ? ' · ' + c.length + '"' : '';
+      const popup = `<div class="popup-weight">${weight}${length}</div>
+        <div class="popup-meta">
+          ${c.lure || 'Unknown lure'}<br>
+          ${c.date}<br>
+          ${c.notes ? c.notes : ''}
+        </div>`;
+      L.marker([c.lat, c.lon], { icon })
+        .bindPopup(popup, { maxWidth: 200 })
+        .addTo(mapInstance);
+    });
+
+    if (withCoords.length > 1) {
+      const bounds = L.latLngBounds(withCoords.map(c => [c.lat, c.lon]));
+      mapInstance.fitBounds(bounds, { padding: [30, 30] });
+    }
+
+    setTimeout(() => mapInstance.invalidateSize(), 100);
+  });
+}
+
+
+
+
+const CACHE_KEY = 'fishAICache';
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+function saveCache(data) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
+  } catch (e) {}
+}
+
+function loadCache() {
+  try {
+    const raw = null;
+    if (!raw) return null;
+    const { ts, data } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_TTL) return null;
+    return data;
+  } catch (e) { return null; }
+}
+
+function renderAll(wx, moon, waterTemp, placeName) {
+  document.getElementById('locLabel').textContent = placeName || 'Your location';
+  document.getElementById('headerSub').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  weatherData = wx;
+  currentMoon = moon;
+  restoreSpecies();
+  renderStatusBar(wx, moon, waterTemp);
+  renderTimeline(wx, moon);
+  renderLures(wx);
+  renderConditions(wx, moon, waterTemp);
+  renderTips(wx, moon);
+  if (wx.daily && wx.daily.length > 0) renderWeekForecast(wx.daily);
+  renderStrategy(wx, moon);
+  startAlertChecking(wx, moon);
+  requestNotificationPermission();
+  initSwipeHandlers();
+  checkForUpdate();
+}
+
+function showError(msg) {
+  var el = document.getElementById('errorBar');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 5000);
+}
+
+// ── Swipe to close -- document level event delegation ─────────────────────
+// Attached once at startup, works regardless of dynamic content changes
+var _swipeStartX = 0;
+var _swipeStartY = 0;
+var _swipeTarget = null;
+
+document.addEventListener('touchstart', function(e) {
+  _swipeStartX = e.touches[0].clientX;
+  _swipeStartY = e.touches[0].clientY;
+  _swipeTarget = e.target;
+}, { passive: true });
+
+document.addEventListener('touchend', function(e) {
+  var dx = e.changedTouches[0].clientX - _swipeStartX;
+  var dy = e.changedTouches[0].clientY - _swipeStartY;
+  var absDx = Math.abs(dx);
+  var absDy = Math.abs(dy);
+  var THRESHOLD = 50;
+
+  // Must be a deliberate swipe not a tap
+  if (absDx < THRESHOLD && absDy < THRESHOLD) return;
+
+  // Check if swipe happened inside or near the lure sheet
+  var sheet = document.getElementById('lureSheet');
+  var sheetContent = document.getElementById('lureSheetContent');
+  if (sheet && sheet.classList.contains('open')) {
+    // Swipe down or left on sheet content closes it
+    if (sheetContent && sheetContent.contains(_swipeTarget)) {
+      if ((absDy > absDx && dy > THRESHOLD) || (absDx > absDy && dx < -THRESHOLD)) {
+        sheet.classList.remove('open');
+        return;
+      }
+    }
+    // Swipe right on dark overlay closes it
+    if (_swipeTarget === sheet && absDx > absDy && dx > THRESHOLD) {
+      sheet.classList.remove('open');
+      return;
+    }
+  }
+
+  // Swipe up on bite alert dismisses it
+  var alert = document.getElementById('biteAlert');
+  if (alert && alert.classList.contains('show')) {
+    if (alert.contains(_swipeTarget) && absDy > absDx && dy < -THRESHOLD) {
+      dismissBiteAlert();
+      return;
+    }
+  }
+
+  // Swipe down on water panel body closes it
+  var waterBody = document.getElementById('waterPanelBody');
+  if (waterBody && waterBody.classList.contains('open')) {
+    if (waterBody.contains(_swipeTarget) && absDy > absDx && dy > THRESHOLD) {
+      waterBody.classList.remove('open');
+      document.getElementById('waterPanelArrow').classList.remove('open');
+      document.getElementById('waterPanelHeader').classList.remove('open');
+      return;
+    }
+  }
+}, { passive: true });
+
+function initSwipeHandlers() {
+  // Swipe handlers are now document-level -- nothing to init
+  // Kept for compatibility with existing renderAll call
+}
+
+// ── Version check / update banner ─────────────────────────────────────────
+var _updateUrl = null;
+
+function checkForUpdate() {
+  try {
+    if (!VERSION_CHECK_URL || VERSION_CHECK_URL.indexOf('YOUR_GITHUB') !== -1) return;
+    // Non-blocking -- runs in background after 3 second delay
+    setTimeout(function() {
+      fetch(VERSION_CHECK_URL + '?t=' + Date.now())
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data || !data.version) return;
+          var latest = data.version;
+          _updateUrl = data.download_url || null;
+          if (compareVersions(latest, APP_VERSION) > 0) {
+            var sub = document.getElementById('updateBannerSub');
+            if (sub) sub.textContent = 'v' + latest + ' is available -- tap to install';
+            var banner = document.getElementById('updateBanner');
+            if (banner) banner.classList.add('show');
+          }
+        })
+        .catch(function() {});
+    }, 3000);
+  } catch(e) {}
+}
+
+function compareVersions(a, b) {
+  var pa = a.split('.').map(Number);
+  var pb = b.split('.').map(Number);
+  for (var i = 0; i < 3; i++) {
+    var diff = (pa[i] || 0) - (pb[i] || 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
+function openUpdate() {
+  if (_updateUrl) {
+    window.open(_updateUrl, '_system');
+  }
+  dismissUpdate();
+}
+
+function dismissUpdate() {
+  var banner = document.getElementById('updateBanner');
+  if (banner) banner.classList.remove('show');
+}
+
+// ── Page navigation ───────────────────────────────────────────────────────
+function switchPage(name) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  var page = document.getElementById('page' + name);
+  var nav = document.getElementById('nav' + name);
+  if (page) page.classList.add('active');
+  if (nav) nav.classList.add('active');
+  if (name === 'Log') renderCatches();
+  if (name === 'Map') renderMap();
+}
+
+// ── Hot bite notification system ───────────────────────────────────────────
+var _lastAlertHour = -1;
+var _alertDismissed = false;
+var _alertInterval = null;
+var _alertWx = null;
+var _alertMoon = null;
+
+function dismissBiteAlert() {
+  var el = document.getElementById('biteAlert');
+  if (el) el.classList.remove('show');
+  _alertDismissed = true;
+}
+
+function checkBiteAlert() {
+  if (!_alertWx || !_alertMoon) return;
+  var hour = new Date().getHours();
+  if (hour === _lastAlertHour) return;
+
+  var currentSlot = null;
+  for (var i = 0; i < TIME_SLOTS.length; i++) {
+    if (hour >= TIME_SLOTS[i].hours[0] && hour < TIME_SLOTS[i].hours[1]) {
+      currentSlot = TIME_SLOTS[i];
+      break;
+    }
+  }
+  if (!currentSlot) return;
+
+  var score = biteScore(currentSlot.hours, _alertWx, _alertMoon);
+  var currentIdx = TIME_SLOTS.indexOf(currentSlot);
+  var nextScore = currentIdx + 1 < TIME_SLOTS.length
+    ? biteScore(TIME_SLOTS[currentIdx + 1].hours, _alertWx, _alertMoon)
+    : 0;
+
+  var shouldAlert = false;
+  var title = '';
+  var sub = '';
+
+  if (score >= 0.75) {
+    shouldAlert = true;
+    title = 'Hot bite window RIGHT NOW';
+    sub = Math.round(score * 100) + '% rating -- conditions are firing';
+    _alertDismissed = false;
+  } else if (nextScore >= 0.75 && currentIdx + 1 < TIME_SLOTS.length) {
+    shouldAlert = true;
+    title = 'Hot bite coming -- ' + TIME_SLOTS[currentIdx + 1].label;
+    sub = Math.round(nextScore * 100) + '% rating incoming -- head out soon';
+    _alertDismissed = false;
+  }
+
+  if (shouldAlert && !_alertDismissed) {
+    var titleEl = document.getElementById('biteAlertTitle');
+    var subEl = document.getElementById('biteAlertSub');
+    var alertEl = document.getElementById('biteAlert');
+    if (titleEl) titleEl.textContent = title;
+    if (subEl) subEl.textContent = sub;
+    if (alertEl) alertEl.classList.add('show');
+    _lastAlertHour = hour;
+    setTimeout(function() {
+      var el = document.getElementById('biteAlert');
+      if (el) el.classList.remove('show');
+    }, 8000);
+    // Build rich notification body for watch
+    var speciesLabel = currentSpecies === 'smallmouth' ? 'Smallmouth' : currentSpecies === 'pike' ? 'N. Pike' : 'Largemouth';
+    var topLure = '';
+    if (weatherData && currentMoon) {
+      var nc = buildConditionContext(weatherData, currentMoon);
+      var nscored = scoreAllLures(nc);
+      if (nscored && nscored.length > 0) topLure = nscored[0].name;
+    }
+    var pressureTrend = weatherData && weatherData.pressure_hpa > 1015 ? 'Pressure rising' : weatherData && weatherData.pressure_hpa < 1005 ? 'Pressure falling' : 'Pressure stable';
+    var moonLabel = currentMoon ? currentMoon.emoji + ' ' + currentMoon.name : '';
+    var richTitle = 'FishAI -- ' + title;
+    var richBody = speciesLabel + ' | ' + sub +
+      (topLure ? ' | Top lure: ' + topLure : '') +
+      ' | ' + pressureTrend +
+      (moonLabel ? ' | ' + moonLabel : '');
+
+    // Try Capacitor Local Notifications first (works in app + mirrors to watch)
+    try {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+        var LocalNotifications = window.Capacitor.Plugins.LocalNotifications;
+        LocalNotifications.requestPermissions().then(function(result) {
+          if (result.display === 'granted') {
+            LocalNotifications.schedule({
+              notifications: [{
+                title: richTitle,
+                body: richBody,
+                id: 1001,
+                schedule: { at: new Date(Date.now() + 500) },
+                sound: null,
+                attachments: null,
+                actionTypeId: '',
+                extra: null,
+                smallIcon: 'ic_launcher',
+                iconColor: '#1D9E75',
+              }]
+            });
+          }
+        });
+      }
+    } catch(e) {}
+
+    // Fallback to web Notifications API (works in Chrome browser)
+    try {
+      if (window.Notification && Notification.permission === 'granted') {
+        new Notification(richTitle, { body: richBody, tag: 'bite-alert' });
+      } else if (window.Notification && Notification.permission === 'default') {
+        Notification.requestPermission().then(function(p) {
+          if (p === 'granted') new Notification(richTitle, { body: richBody, tag: 'bite-alert' });
+        });
+      }
+    } catch(e) {}
+  }
+}
+
+function startAlertChecking(wx, moon) {
+  _alertWx = wx; _alertMoon = moon;
+  if (_alertInterval) clearInterval(_alertInterval);
+  _alertDismissed = false;
+  checkBiteAlert();
+  _alertInterval = setInterval(function() {
+    _alertDismissed = false;
+    checkBiteAlert();
+  }, 10 * 60 * 1000);
+}
+
+function requestNotificationPermission() {
+  // Try Capacitor Local Notifications
+  try {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+      window.Capacitor.Plugins.LocalNotifications.requestPermissions();
+      return;
+    }
+  } catch(e) {}
+  // Fallback web API
+  try {
+    if (window.Notification && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  } catch(e) {}
+}
+
+async function silentRefresh() {
+  hideSplash();
+
+  const btn = document.querySelector('.refresh-btn');
+  if (btn) { btn.classList.add('spinning'); btn.disabled = true; }
+
+
+  const moon = getMoonPhase(new Date());
+  const dateStr = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+
+  try {
+    try {
+      const loc = await Promise.race([
+        getLocation(),
+        new Promise((_, rej) => setTimeout(() => rej('timeout'), 4000))
+      ]);
+      lat = loc.lat; lon = loc.lon;
+    } catch(e) { /* keep existing lat/lon */ }
+
+    const T = (ms, fallback = null) => new Promise(res => setTimeout(() => res(fallback), ms));
+    const [wx, waterTemp, placeName] = await Promise.all([
+      Promise.race([fetchWeather(lat, lon).catch(() => null), T(6000)]),
+      Promise.race([fetchWaterTemp(lat, lon).catch(() => null), T(4000)]),
+      Promise.race([reverseGeocode(lat, lon).catch(() => null), T(3000)]),
+    ]);
+
+    if (wx) {
+      saveCache({ wx, waterTemp, placeName, lat, lon });
+      renderAll(wx, moon, waterTemp, placeName || 'Your location');
+      document.getElementById('headerSub').textContent = dateStr;
+    } else {
+      showError('Refresh failed. Check your connection.');
+    }
+  } catch(e) {
+    showError('Refresh failed: ' + e.message);
+  } finally {
+    if (btn) { btn.classList.remove('spinning'); btn.disabled = false; }
+  }
+}
+
+function hideSplash() {
+  const el = document.getElementById('splash');
+  if (!el) return;
+  el.style.opacity = '0';
+  el.style.pointerEvents = 'none';
+  setTimeout(() => { el.style.display = 'none'; }, 350);
+}
+
+async function init() {
+  const moon = getMoonPhase(new Date());
+  const dateStr = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+
+  const cached = loadCache();
+  if (cached) {
+    try { renderAll(cached.wx, moon, cached.waterTemp, cached.placeName); } catch(e) {}
+    document.getElementById('headerSub').textContent = dateStr + ' · Refreshing...';
+    setTimeout(hideSplash, 800);
+  } else {
+    document.getElementById('headerSub').textContent = 'Loading conditions...';
+    document.getElementById('locLabel').textContent = 'Locating...';
+  }
+
+  try {
+    const loc = await Promise.race([
+      getLocation(),
+      new Promise((_, rej) => setTimeout(() => rej('timeout'), 4000))
+    ]);
+    lat = loc.lat; lon = loc.lon;
+  } catch(e) {
+    lat = (cached && cached.lat) || 41.674;
+    lon = (cached && cached.lon) || -88.002;
+  }
+
+  const T = (ms, fallback = null) => new Promise(res => setTimeout(() => res(fallback), ms));
+  const [wx, waterTemp, placeName] = await Promise.all([
+    Promise.race([fetchWeather(lat, lon).catch(() => null), T(6000)]),
+    Promise.race([fetchWaterTemp(lat, lon).catch(() => null), T(4000)]),
+    Promise.race([reverseGeocode(lat, lon).catch(() => null), T(3000, (cached && cached.placeName) || 'Your location')]),
+  ]);
+
+  if (wx) {
+    saveCache({ wx, waterTemp, placeName, lat, lon });
+    try { renderAll(wx, moon, waterTemp, placeName || (cached && cached.placeName) || 'Your location'); } catch(e) {}
+  } else if (cached) {
+    document.getElementById('headerSub').textContent = dateStr + ' · Cached data';
+  } else {
+    showError('No data available. Check connection and tap ↻');
+  }
+
+  document.getElementById('headerSub').textContent = dateStr;
+  hideSplash();
+}
+
+_LURE_DETAILS = {
+  'Frog / Popper': {
+    icon: '🐸', tag: '🔥 Topwater', tagClass: 'tag-hot',
+    best: 'Dawn, dusk, and overcast days over heavy cover',
+    colors: ['Black (low light)', 'White (overcast)', 'Natural green (sunny)', 'Bream pattern (ponds)'],
+    sizes: ['1/2 oz standard', '3/8 oz finesse ponds', '5/8 oz heavy mats'],
+    rod: '7ft 3in heavy power, fast action',
+    line: '50-65 lb braid -- no leader',
+    hook: 'Comes rigged -- check hook gap clears body',
+    setup: [
+      { s: 'Cast past the target', d: 'Accuracy matters more than distance. Land it beyond the cover and work it through.' },
+      { s: 'Walk the dog', d: 'Twitch the rod tip down and left, then right -- creating a side to side walk.' },
+      { s: 'Pause on every piece of cover', d: 'Let it sit still for 1 to 3 seconds on any laydown, pad edge, or mat opening.' },
+      { s: 'Wait on the strike', d: 'Do not set the hook when you see the blowup. Wait until you feel the weight of the fish.' },
+    ],
+    variations: ['Popper (open water)', 'Toad (faster retrieve)', 'Spook (walking bait)', 'Prop bait (choppy water)'],
+    proTip: 'In thick mats, add a rattle inside the frog. Bass sense it through their lateral line before they can see it.',
+  },
+  'Buzzbait': {
+    icon: '💦', tag: '⭐ Low light', tagClass: '',
+    best: 'First and last 30 minutes of light, calm wind, warm months',
+    colors: ['Black (low light / dark water)', 'White (clear water)', 'Chartreuse (stained water)'],
+    sizes: ['3/8 oz standard', '1/2 oz windy conditions', '1/4 oz small ponds'],
+    rod: '7ft medium-heavy, moderate-fast action',
+    line: '50 lb braid or 17 lb fluorocarbon',
+    hook: 'Add a trailer hook -- misses are common without one',
+    setup: [
+      { s: 'Start reeling before it hits the water', d: 'The blade needs to be spinning on entry or it will sink.' },
+      { s: 'Keep the rod tip high', d: 'Point it at 10 oclock to keep the bait on the surface throughout the retrieve.' },
+      { s: 'Never stop reeling', d: 'A buzzbait sinks the moment you stop. Vary speed but keep it moving.' },
+      { s: 'Cast parallel to the bank', d: 'More time in the strike zone than casting perpendicular from shore.' },
+    ],
+    variations: ['Clacker buzzbait (louder, stained water)', 'Prop bait (calmer presentation)', 'Whopper Plopper (longer pauses)'],
+    proTip: 'Squeak your buzzbait by bending the blade arm slightly. Squeaky buzzbaits consistently outfish quiet ones.',
+  },
+  'Senko Worm': {
+    icon: '🐛', tag: '🔥 All-day', tagClass: 'tag-hot',
+    best: 'Any time, any season -- most versatile soft plastic made',
+    colors: ['Green pumpkin (clear water)', 'Watermelon red (stained)', 'Black blue (dark / muddy)', 'Junebug (night)'],
+    sizes: ['5 inch standard', '4 inch pressured fish', '7 inch trophy hunting'],
+    rod: '7ft medium power, fast action',
+    line: '10-12 lb fluorocarbon Texas / 15 lb braid wacky',
+    hook: 'Texas: 3/0 EWG offset. Wacky: 1/0 straight shank with O-ring',
+    setup: [
+      { s: 'Rig wacky style with an O-ring', d: 'Thread the O-ring on the center of the worm to save plastic -- one worm lasts 10+ fish.' },
+      { s: 'Cast near any visible structure', d: 'Docks, laydowns, grass edges, rocks -- the Senko works everywhere.' },
+      { s: 'Do absolutely nothing', d: 'After the cast, put the rod down. Seriously. The action comes from the natural fall on slack line.' },
+      { s: 'Watch your line', d: 'Most strikes happen on the fall. If your line moves sideways or jumps, set the hook immediately.' },
+    ],
+    variations: ['Texas rig (weedless)', 'Wacky rig (open water)', 'Neko rig (weighted nose)', 'Drop shot (suspended)'],
+    proTip: 'Fish two rods -- one Texas rigged for cover, one wacky for open water. Cover twice as many situations.',
+  },
+  'Jig + Craw': {
+    icon: '🦞', tag: '🔥 Cold water', tagClass: 'tag-hot',
+    best: 'Cold water, high pressure, deep structure, post-frontal conditions',
+    colors: ['Black blue (dark water / overcast)', 'Green pumpkin (clear / sunny)', 'Brown (natural crawfish)', 'Candy craw (spring)'],
+    sizes: ['3/8 oz shallow / cold', '1/2 oz standard', '3/4 oz deep / windy', '1 oz 15ft+'],
+    rod: '7ft 3in heavy power, fast action',
+    line: '15-20 lb fluorocarbon',
+    hook: 'Built in -- check point sharpness before every session',
+    setup: [
+      { s: 'Pitch or flip to structure', d: 'Skip it under docks, pitch to laydowns, flip into grass pockets.' },
+      { s: 'Let it fall on a semi-slack line', d: 'Bass hit jigs on the fall more than on the bottom. Watch your line.' },
+      { s: 'Drag -- do not hop', d: 'Drag the jig slowly along the bottom. Lift the rod 6 inches, reel slack, repeat.' },
+      { s: 'Feel for bottom composition', d: 'Hard bottom means bass are likely nearby. Soft mud means move on.' },
+    ],
+    variations: ['Football jig (deep hard bottom)', 'Finesse jig (clear / pressured)', 'Swim jig (grass)', 'Punch rig (heavy mats)'],
+    proTip: 'Match your trailer to local crawfish color. Flip a rock in the water to see what color crawfish are in your area.',
+  },
+  'Spinnerbait': {
+    icon: '🪝', tag: '⭐ Pick', tagClass: '',
+    best: 'Windy days, stained water, post-spawn, along any cover',
+    colors: ['Chartreuse white (stained / muddy)', 'Sexy shad (clear / sunny)', 'All white (overcast)', 'Gold blade (fall / low light)'],
+    sizes: ['1/4 oz ultra shallow', '3/8 oz standard', '1/2 oz windy / fast', '3/4 oz deep / cold'],
+    rod: '7ft medium-heavy, moderate action',
+    line: '15-17 lb fluorocarbon or 30 lb braid',
+    hook: 'Check and replace trailer hook often -- they dull fast',
+    setup: [
+      { s: 'Cast past and beyond the target', d: 'The bait needs to be running at full speed when it enters the strike zone.' },
+      { s: 'Slow roll near bottom', d: 'Just fast enough to feel the blade thumping. Let it deflect off rocks and wood.' },
+      { s: 'Burn near the surface', d: 'In low light, reel fast so the blade creates a wake just under the surface.' },
+      { s: 'Add a swimbait trailer', d: 'A 3 inch paddle tail adds bulk and slows the fall for a bigger profile.' },
+    ],
+    variations: ['Bladed jig (ChatterBait -- grass)', 'Inline spinner (small ponds)', 'Umbrella rig (open water schooling)'],
+    proTip: 'Slow down dramatically when you feel the bait contact structure. That sudden slow-down triggers reactionary strikes.',
+  },
+  'Swimbait': {
+    icon: '🐟', tag: '⭐ Pick', tagClass: '',
+    best: 'Pre-spawn, fall shad patterns, clear water, open water schooling',
+    colors: ['Shad / threadfin (most common)', 'Bluegill (shallow, spawning season)', 'White (overcast / stained)', 'Natural trout (trophy lakes)'],
+    sizes: ['3.8 inch on 1/4 oz (finesse)', '4.5 inch on 3/8 oz (standard)', '6 inch on 1 oz (big fish only)'],
+    rod: '7ft medium-heavy, moderate action',
+    line: '12-15 lb fluorocarbon',
+    hook: 'Swimbait hook or screw-lock jig head -- match to bait size',
+    setup: [
+      { s: 'Count it down to depth', d: 'Let it sink counting 1 per foot. Match depth to where bait fish are holding.' },
+      { s: 'Slow and steady wins', d: 'Just fast enough to feel the tail kick. Slower than you think.' },
+      { s: 'Vary the retrieve', d: 'Slow, pause, slow, pause. The pause on a straight hook causes a nose-dive that triggers strikes.' },
+      { s: 'Match the local baitfish', d: 'Size matters more than color. If shad are 2 inches, use a 2.5 inch bait.' },
+    ],
+    variations: ['Glide bait (open water big fish)', 'Hollow body (surface)', 'Multi-jointed (slow sink)', 'Boot tail (faster retrieve)'],
+    proTip: 'In clear water, downsize to a 3 inch bait on 8 lb fluorocarbon. Bass in pressured clear lakes have seen every big swimbait.',
+  },
+  'Crawfish Crank': {
+    icon: '🦞', tag: '🔥 Spring', tagClass: 'tag-hot',
+    best: 'Pre-spawn and spawn, around rocks and hard bottom, 45 to 65 degreesF water',
+    colors: ['Red crawfish (universal spring)', 'Chartreuse craw (stained water)', 'Naturals (clear water)', 'Fire tiger (muddy water)'],
+    sizes: ['Square bill (shallow 1-4ft)', 'Medium diver (5-10ft)', 'Deep diver (10-15ft)'],
+    rod: '7ft medium power, moderate action -- fiberglass preferred',
+    line: '12-15 lb fluorocarbon (sinks, helps bait dive)',
+    hook: 'Upgrade to Gamakatsu or Owner round bend trebles',
+    setup: [
+      { s: 'Target hard bottom and rocks', d: 'Crawfish live on rock, gravel, and chunk rock. Cast where you see those bottom types.' },
+      { s: 'Deflect the bait intentionally', d: 'Aim for submerged rocks and laydowns. The erratic deflection is the trigger.' },
+      { s: 'Use a stop-and-go retrieve', d: 'Crank down to depth, pause 2 seconds, crank again. The pause kills it.' },
+      { s: 'Fish the right depth', d: 'Match your crankbait depth rating to the actual depth of the cover you are targeting.' },
+    ],
+    variations: ['Flat-sided crank (cold water, subtle)', 'Lipless (rip through grass)', 'Jerkbait (suspended fish)', 'Squarebill (very shallow)'],
+    proTip: 'In early spring, a red crankbait deflecting off rocks is the single most reliable pattern for pre-spawn largemouth.',
+  },
+  'Lipless Crank': {
+    icon: '🎣', tag: '🔥 Fall', tagClass: 'tag-hot',
+    best: 'Fall and late winter, grass edges, shad schools, 48 to 70 degreesF water',
+    colors: ['Red (late winter -- universal)', 'Chrome shad (fall schools)', 'Gold (stained water)', 'Sexy shad (clear water)'],
+    sizes: ['1/4 oz (finesse / cold)', '1/2 oz standard', '3/4 oz windy / deep'],
+    rod: '7ft medium-heavy, moderate action',
+    line: '12-14 lb fluorocarbon',
+    hook: 'Upgrade trebles -- stock hooks are often weak',
+    setup: [
+      { s: 'Cast over grass flats', d: 'Let it sink into the top of the grass canopy, then rip it free.' },
+      { s: 'Rip and flutter', d: 'Snap the rod up sharply to rip through grass, then let it flutter back down on slack line.' },
+      { s: 'Count it to depth', d: 'Sinks about 1 foot per second. Count to the right depth before engaging the reel.' },
+      { s: 'Yo-yo retrieve in open water', d: 'Lift the rod 3 feet then drop back and reel slack. Repeat all the way back.' },
+    ],
+    variations: ['Blade bait (cold water vertical jigging)', 'Tail spinner (open water)', 'Flicker shad (moderate retrieve)'],
+    proTip: 'In fall, look for diving birds over open water. They are on shad -- a chrome lipless crank in that area is nearly guaranteed to get bit.',
+  },
+  'Carolina Rig': {
+    icon: '🪝', tag: '⭐ Depth', tagClass: '',
+    best: 'Post-spawn, summer, high pressure, deep structure 10 to 20ft',
+    colors: ['Green pumpkin (universal)', 'Watermelon (clear water)', 'June bug (stained)', 'Black blue (dark water)'],
+    sizes: ['1/2 oz sinker (standard)', '1 oz (deep / wind)', '18 inch leader standard -- go longer in clear water'],
+    rod: '7ft 6in medium-heavy, moderate-fast action -- long rod',
+    line: '17 lb fluorocarbon main, 12 lb fluorocarbon leader',
+    hook: '2/0 to 3/0 EWG offset -- match to bait size',
+    setup: [
+      { s: 'Build the rig', d: 'Bullet weight, glass bead, barrel swivel. 18 inch leader to hook. Lizard, creature, or worm.' },
+      { s: 'Make a long cast', d: 'The C-rig shines at distance. Long rod and heavy weight let you cover a lot of water.' },
+      { s: 'Drag slowly', d: 'Sweep the rod 3 feet, reel up the slack, pause. Feel for any change in bottom.' },
+      { s: 'Set hard on the bite', d: 'You have 18 inches of leader and a heavy sinker. Drive the hook home with authority.' },
+    ],
+    variations: ['Texas rig (heavy cover)', 'Shaky head (vertical)', 'Drop shot (suspended)', 'Cheburashka (snaggy bottom)'],
+    proTip: 'Add a glass bead between the sinker and swivel. The clicking sound imitates crawfish claws and draws curious bass.',
+  },
+  'Ned Rig': {
+    icon: '🪱', tag: '⭐ Finesse', tagClass: '',
+    best: 'High pressure, clear water, post-front, mid-day summer, tough conditions',
+    colors: ['Green pumpkin (universal)', 'Morning dawn / pink (clear water)', 'Black (night)', 'Goby (rocky lakes)'],
+    sizes: ['2.75 inch (standard)', '3.5 inch (bigger bass)', '1/6 oz head (shallow)', '1/4 oz head (deep / wind)'],
+    rod: '7ft medium-light to medium, fast action -- spinning rod',
+    line: '8-10 lb fluorocarbon or 10 lb braid with 8 lb fluoro leader',
+    hook: 'Mushroom head jig -- Finesse TRD or ElaZtech baits are ideal',
+    setup: [
+      { s: 'Cast and let it sink', d: 'On a tight line. The ElaZtech material is so buoyant the tail stands straight up on bottom.' },
+      { s: 'Drag super slowly', d: 'Barely move it. Tiny hops of 2 to 3 inches. It looks alive sitting still.' },
+      { s: 'Pause for 5 to 10 seconds', d: 'Longer than feels comfortable. Bass will inhale it while it is stationary.' },
+      { s: 'Set gently', d: 'Light hook and light line -- lift into the fish rather than a hard hookset.' },
+    ],
+    variations: ['Shaky head (heavier cover)', 'Drop shot (suspended)', 'Wacky Ned (more action)', 'Neko rig (faster fall)'],
+    proTip: 'The Ned rig was designed for impossible conditions. If nothing else is working, tie one on. It catches fish that have seen everything.',
+  },
+  'Tube Bait': {
+    icon: '🦞', tag: '🔥 Smallmouth', tagClass: 'tag-hot',
+    best: 'Year-round for smallmouth, especially on rock, gravel, and current',
+    colors: ['Green pumpkin (universal)', 'Brown or smoke (clear water)', 'Chartreuse (stained)', 'Watermelon (sunny shallow)'],
+    sizes: ['3.5 inch on 1/4oz (standard)', '2.75 inch finesse (pressured fish)', '4.5 inch (big fish)'],
+    rod: '7ft medium power, fast action -- spinning preferred',
+    line: '8-10lb fluorocarbon or 10lb braid with 8lb fluoro leader',
+    hook: '1/4oz tube jig head inserted inside the body',
+    setup: [
+      { s: 'Insert the jig head inside the tube', d: 'Push the hook through the body from inside so it exits the side. Keeps it weedless and natural looking.' },
+      { s: 'Drag along rock bottom', d: 'Smallmouth love hard bottom. Drag slowly feeling for gravel, rock, and ledge transitions.' },
+      { s: 'Shake on the pause', d: 'Drag 2 feet, pause, shake the rod tip slightly. The tentacles flutter and drive smallmouth crazy.' },
+      { s: 'Target current breaks', d: 'In rivers, position upstream and let it drift into eddies behind boulders and timber.' },
+    ],
+    variations: ['Drop shot tube (suspended)', 'Shaky head tube (finesse)', 'Carolina rig tube (deep search)', 'Wacky tube (open water)'],
+    proTip: 'In clear water smallmouth lakes, downsize to a 2.75 inch tube on 6lb fluorocarbon. Smallmouth in clear lakes have seen everything and finesse wins.',
+  },
+  'Inline Spinner': {
+    icon: '🪝', tag: '⭐ Rivers', tagClass: '',
+    best: 'Moving water, current seams, post-spawn smallmouth, rivers and streams',
+    colors: ['Gold blade (stained / overcast)', 'Silver blade (clear / sunny)', 'Chartreuse body (murky water)', 'White body (low light)'],
+    sizes: ['1/8oz (small streams)', '1/4oz (standard rivers)', '3/8oz (large rivers / lakes)'],
+    rod: '6ft 6in to 7ft medium light, fast action -- spinning',
+    line: '8-10lb monofilament (mono floats and handles current better than fluoro)',
+    hook: 'Comes with treble -- add a small trailer for extra profile',
+    setup: [
+      { s: 'Cast upstream and across', d: 'Let the current swing the bait naturally through the strike zone.' },
+      { s: 'Keep the blade spinning', d: 'Reel just fast enough to feel the blade thumping. If you feel nothing, speed up.' },
+      { s: 'Target current seams', d: 'The line where fast and slow water meet. Smallmouth hold in the slow water watching the fast lane for food.' },
+      { s: 'Let it swing at the end', d: 'At the end of the drift, let it swing below you and pause. Strikes often come at the swing.' },
+    ],
+    variations: ['Rooster Tail (classic river)', 'Mepps Aglia (trophy smallmouth)', 'Blue Fox Vibrax (cold water)', 'Panther Martin (small streams)'],
+    proTip: 'In rivers, wade quietly and cast to the far bank. Noisy wading ruins the closest third of the water before you even start fishing.',
+  },
+  'Shaky Head': {
+    icon: '🪱', tag: '⭐ Finesse', tagClass: '',
+    best: 'Clear water, pressured smallmouth, finesse situations, post-front',
+    colors: ['Green pumpkin (universal)', 'Morning dawn (clear water)', 'Smoke or natural (ultra clear)', 'Black (night)'],
+    sizes: ['5 inch finesse worm on 3/16oz head (standard)', '4 inch worm on 1/8oz (light wind)', '6 inch worm on 1/4oz (deeper)'],
+    rod: '7ft medium light to medium, fast action -- spinning',
+    line: '8-10lb fluorocarbon',
+    hook: 'Shakey head jig -- ball head or stand-up style',
+    setup: [
+      { s: 'Cast and let it sink on a tight line', d: 'Watch for the line to jump on the fall -- both largemouth and smallmouth hit it dropping.' },
+      { s: 'Shake in place', d: 'Tiny rod tip vibrations while the bait sits still. The worm quivers and the head stays planted.' },
+      { s: 'Drag slowly between shakes', d: 'Move it 6 inches, shake for 5 seconds, move again. Painfully slow beats everything.' },
+      { s: 'Target rock and gravel transitions', d: 'Where soft meets hard bottom is where smallmouth wait. Feel for the change.' },
+    ],
+    variations: ['Ned rig (buoyant tail stands up)', 'Drop shot (off bottom)', 'Wacky rig (open water)', 'Neko rig (faster fall)'],
+    proTip: 'In ultra-clear lakes where smallmouth have seen everything, a 4 inch finesse worm on a 1/8oz head and 6lb fluorocarbon is your best shot at getting bit.',
+  },
+  'Spoon': {
+    icon: '🎣', tag: '🔥 Pike', tagClass: 'tag-hot',
+    best: 'Northern pike year-round, shallow to mid-depth weed edges and flats',
+    colors: ['Gold (overcast / stained)', 'Silver (clear / sunny)', 'Red and white (classic pike)', 'Five of diamonds (yellow with red spots)'],
+    sizes: ['3/4oz (standard)', '1oz (windy / deeper)', '1/2oz (calm / shallow)'],
+    rod: '7ft medium-heavy to heavy, moderate action',
+    line: '30-50lb braid with 12 inch wire leader -- never skip the wire',
+    hook: 'Replace factory treble with a sharp quality hook -- spoons come with average hooks',
+    setup: [
+      { s: 'Always use a wire leader', d: 'Pike teeth cut through mono and fluorocarbon instantly. Use at least 12 inches of single-strand wire or titanium.' },
+      { s: 'Cast over weed flats', d: 'Pike ambush from below. Work the spoon above weed tops with a steady retrieve.' },
+      { s: 'Flutter it down on pauses', d: 'Stop reeling briefly and let the spoon flutter and wobble down. Pike crush it on the drop.' },
+      { s: 'Work weed edges thoroughly', d: 'Cast parallel to weed edges, not just perpendicular. More time in the zone means more strikes.' },
+    ],
+    variations: ['Weedless spoon (thick vegetation)', 'Jigging spoon (vertical / ice)', 'Casting spoon (open water)', 'Trolling spoon (covering water)'],
+    proTip: 'A struck pike that misses the bait will often circle and strike again. Stop the spoon immediately after a miss and let it flutter in place for 3 seconds.',
+  },
+  'Jerkbait': {
+    icon: '🐟', tag: '⭐ Pike / SMB', tagClass: '',
+    best: 'Clear water, cold temps, suspended fish, pike and smallmouth in open water',
+    colors: ['Shad pattern (universal)', 'Perch (pike in clear water)', 'Ghost (ultra clear)', 'Chartreuse (stained)'],
+    sizes: ['4.5 inch (smallmouth finesse)', '5-6 inch (pike standard)', '7+ inch (trophy pike)'],
+    rod: '7ft medium-heavy, fast to extra-fast action',
+    line: '12-17lb fluorocarbon (sinks, helps bait dive) -- wire leader for pike',
+    hook: 'Upgrade trebles on all jerkbaits -- stock hooks are soft',
+    setup: [
+      { s: 'Twitch with the rod, not the reel', d: 'Sharp downward rod twitches create the erratic action. The reel just takes up slack.' },
+      { s: 'Pause between twitches', d: 'The pause is the trigger. Start with 1 second. In cold water go 3-5 seconds. Fish hit a still bait.' },
+      { s: 'Vary the cadence', d: 'Twitch-twitch-pause, then twitch-pause-twitch. Erratic beats rhythmic every time.' },
+      { s: 'Target suspended fish', d: 'Pike and smallmouth suspend over deep water watching upward. A jerkbait in their zone is irresistible.' },
+    ],
+    variations: ['Suspending jerkbait (cold water)', 'Sinking jerkbait (deeper fish)', 'Glide bait (big pike)', 'Soft jerkbait (finesse smallmouth)'],
+    proTip: 'In cold water below 48 degrees, a jerkbait paused for 10-15 seconds between twitches outperforms everything else for both pike and smallmouth.',
+  },
+  'Weedless Spoon': {
+    icon: '🎣', tag: '🔥 Summer Pike', tagClass: 'tag-hot',
+    best: 'Summer pike in thick cabbage, milfoil, and surface vegetation',
+    colors: ['Gold (overcast)', 'Silver (clear)', 'Yellow (bright sun)', 'Chartreuse (stained water)'],
+    sizes: ['3/4oz standard', '1oz heavy cover', '1/2oz finesse situations'],
+    rod: '7ft 6in heavy power, fast action -- baitcaster',
+    line: '50-65lb braid -- never fluoro in heavy weeds',
+    hook: 'Single weedless hook -- add a soft plastic trailer for bulk and action',
+    setup: [
+      { s: 'Add a soft plastic trailer', d: 'A curly tail grub or swimbait tail adds action and slows the fall. Pike like a larger profile.' },
+      { s: 'Work over and through cabbage', d: 'Cast over weed tops and retrieve just fast enough to keep it from sinking in.' },
+      { s: 'Let it helicopter down in openings', d: 'When you hit an opening in the weeds, stop reeling. The spoon flutters down and pike explode on it.' },
+      { s: 'Use a wire leader always', d: 'Even a weedless spoon needs a wire leader. A big pike will bite through anything else mid-fight.' },
+    ],
+    variations: ['Casting spoon (open water edges)', 'Weedless frog (thicker mats)', 'Bucktail spinner (search bait)', 'Large swimbait (post-weed season)'],
+    proTip: 'The biggest pike of the summer live in the thickest weeds. If you can cast into it and retrieve without snagging, it is not thick enough.',
+  },
+
+  'Drop Shot': {
+    icon: '🎯', tag: '⭐ Finesse', tagClass: '',
+    best: 'Clear water, post-front, deep fish, pressured smallmouth and bass',
+    colors: ['Green pumpkin (universal)', 'Morning dawn (clear water)', 'Smoke or natural (ultra clear)', 'Black (night)'],
+    sizes: ['1/4oz weight, 4 to 6in finesse worm, 12 to 18in leader'],
+    rod: '7ft medium light to medium, fast action -- spinning',
+    line: '8-10lb fluorocarbon or 10lb braid with 8lb fluoro leader',
+    hook: '1/0 to 2/0 drop shot hook -- nose hook the bait only',
+    setup: [
+      { s: 'Tie hook with Palomar leaving long tag end', d: 'Leave 12 to 18 inches of tag end below the hook. This becomes the leader to the weight.' },
+      { s: 'Orient hook point up', d: 'Pass the hook through the loop twice when tying the Palomar so the hook rides point up naturally.' },
+      { s: 'Clip drop shot weight to tag end', d: 'Use a 1/4oz teardrop or cylinder weight. The weight hangs below the bait.' },
+      { s: 'Nose hook the plastic', d: 'Pierce through the nose of the worm only. Let it hang freely -- do not bury the point.' },
+      { s: 'Shake in place', d: 'Hold the bait still and shake the rod tip. The worm quivers while the weight stays planted on bottom.' },
+    ],
+    variations: ['Wacky rig (open water)', 'Ned rig (buoyant tail)', 'Shaky head (heavier cover)', 'Neko rig (faster fall)'],
+    proTip: 'The drop shot shines in tough post-front conditions. Leave it in one spot longer than feels right -- inactive fish will eventually inhale a bait that will not leave.',
+  },
+  'Topwater Popper': {
+    icon: '💦', tag: '⭐ Topwater', tagClass: '',
+    best: 'Dawn and dusk on smallmouth, open rocky points and gravel flats',
+    colors: ['Chrome or shad (clear water)', 'White (low light)', 'Natural perch (clear lakes)', 'Chartreuse (stained)'],
+    sizes: ['2.5 to 3.5in standard', '4in for trophy smallmouth'],
+    rod: '7ft medium to medium-heavy, moderate-fast action',
+    line: '12-15lb fluorocarbon or 30lb braid',
+    hook: 'Upgrade trebles -- stock hooks on most poppers are soft',
+    setup: [
+      { s: 'Cast past rocky points and shallow flats', d: 'Smallmouth use points and gravel as ambush spots at dawn. Land it beyond the target zone.' },
+      { s: 'Pop and pause', d: 'Short sharp rod tip pops create a splash and gurgle. Then pause 2 to 4 seconds. The pause gets bit.' },
+      { s: 'Walk it on calmer water', d: 'In flat calm conditions walk the dog with the popper for a side to side action between pops.' },
+      { s: 'Speed up when they are aggressive', d: 'In peak feeding windows smallmouth hit fast moving poppers. Slow down when conditions are tough.' },
+    ],
+    variations: ['Frog (heavy cover)', 'Buzzbait (faster retrieve)', 'Whopper Plopper (constant action)', 'Spook (walking bait)'],
+    proTip: 'Smallmouth on topwater at dawn over rocky points is one of the most exciting bites in freshwater fishing. Be there at first light -- the window is often only 30 minutes.',
+  },
+  'Swimbait (large)': {
+    icon: '🐟', tag: '🔥 Pike', tagClass: 'tag-hot',
+    best: 'Northern pike year-round, fall and spring especially, open water and weed edges',
+    colors: ['Perch pattern (universal for pike)', 'Sucker or whitefish (large lakes)', 'Shad pattern (clear water)', 'Chartreuse white (stained)'],
+    sizes: ['6 to 8in on 1 to 2oz jig head', '5in for fussy pike'],
+    rod: '7ft 6in heavy power, moderate action -- baitcaster',
+    line: '50-65lb braid with 12in wire or 80lb fluorocarbon leader',
+    hook: 'Heavy duty swimbait hook -- pike fight hard and standard hooks straighten',
+    setup: [
+      { s: 'Always use a leader', d: 'Wire or very heavy fluorocarbon. Pike teeth will destroy standard leaders instantly mid-fight.' },
+      { s: 'Match local baitfish size', d: 'Pike in trophy lakes key on large prey. A 6 to 8in swimbait matches sucker and perch they eat daily.' },
+      { s: 'Slow steady retrieve', d: 'Just fast enough to feel the tail kick. Slower than you think. Let it sink to the right depth before retrieving.' },
+      { s: 'Vary depth on each cast', d: 'Count it down. Pike suspend at different depths. Find them by counting to 5, 10, 15ft on successive casts.' },
+    ],
+    variations: ['Glide bait (open water)', 'Hollow body swimbait (surface)', 'Paddle tail (standard)', 'Multi-jointed (slow sink)'],
+    proTip: 'For trophy pike over 20lb, upsize to a 8 to 10in swimbait. Big pike rarely waste energy chasing small prey -- you need a bait that matches what they are actually eating.',
+  },
+  'Large Frog': {
+    icon: '🐸', tag: '🔥 Summer Pike', tagClass: 'tag-hot',
+    best: 'Summer pike over thick surface mats, lily pads, and emergent vegetation',
+    colors: ['Black (most visible from below)', 'Natural green (sunny days)', 'White (overcast)', 'Yellow or chartreuse (stained water)'],
+    sizes: ['2 to 3oz -- larger than bass frogs', 'Extra strong hooks required'],
+    rod: '7ft 6in heavy to extra-heavy, fast action',
+    line: '65-80lb braid -- no leader needed with weedless frog',
+    hook: 'Strong double hook -- upgrade if the frog comes with light wire hooks',
+    setup: [
+      { s: 'Target the thickest vegetation', d: 'Big pike hold under the densest mats. Cast onto the mat surface and work it toward openings.' },
+      { s: 'Walk it across the surface', d: 'Twitch, twitch, pause. The frog kicks across pads and mats. Pause near any opening or hole.' },
+      { s: 'Wait on the strike', d: 'Pike blowups are explosive. Wait until you feel the full weight of the fish before setting the hook hard.' },
+      { s: 'Use heavy gear', d: 'You need to horse pike out of thick vegetation immediately after the strike or they will wrap you in weeds.' },
+    ],
+    variations: ['Weedless spoon (mat edges)', 'Punch rig (thickest mats)', 'Rat lure (big pike specialty)', 'Hollow body swimbait (open pockets)'],
+    proTip: 'Pike hit frogs even harder than bass. The strike is often visible from 20 feet away. Stay calm, feel the weight, then set the hook with both hands -- pike have bony mouths.',
+  },
+  'Large Frog / Glider': {
+    icon: '🐸', tag: '🔥 Dawn Pike', tagClass: 'tag-hot',
+    best: 'Dawn and dusk pike on open water and weed edges',
+    colors: ['Black (low light)', 'Natural green (dawn)', 'White belly (any condition)', 'Perch pattern (clear water)'],
+    sizes: ['2 to 3oz frog or 5 to 7in glide bait'],
+    rod: '7ft 6in heavy, fast action',
+    line: '65lb braid with wire leader for frog, heavy fluoro for glider',
+    hook: 'Replace all trebles on glide bait with quality sharp hooks',
+    setup: [
+      { s: 'Fish the first and last light', d: 'Pike are most active at dawn and dusk. Be on the water before sunrise for the best topwater action.' },
+      { s: 'Work weed edges and points', d: 'Cast parallel to weed edges and across shallow points. Pike ambush from below.' },
+      { s: 'Walk the frog across open pockets', d: 'Twitch side to side over any open water surrounded by vegetation.' },
+      { s: 'Glider -- twitch and glide', d: 'Short rod sweeps make the glide bait dart left and right erratically. Deadly on active pike.' },
+    ],
+    variations: ['Large frog (mats)', 'Glide bait (open water)', 'Spook style (walking bait)', 'Big swimbait (subsurface)'],
+    proTip: 'A glide bait at dawn over open flats near vegetation is the single deadliest big pike presentation. The wide erratic glide triggers instinctive reaction strikes from even inactive fish.',
+  },
+  'Bucktail Spinner': {
+    icon: '🪝', tag: '⭐ Search', tagClass: '',
+    best: 'Covering water fast to find active pike, rivers, and post-spawn pike',
+    colors: ['White bucktail (universal)', 'Yellow (stained water)', 'Chartreuse (murky)', 'Natural perch colors (clear water)'],
+    sizes: ['1oz standard', '2oz windy or deep', '3/4oz calm shallow water'],
+    rod: '7ft medium-heavy to heavy, moderate action',
+    line: '30-50lb braid with wire leader -- always wire for pike',
+    hook: 'Single large hook -- replace if corroded or dull',
+    setup: [
+      { s: 'Cast and retrieve steadily', d: 'Medium speed retrieve keeps the blade spinning and the bucktail pulsing. Feel the thump of the blade.' },
+      { s: 'Cover water systematically', d: 'Fan cast across a flat or along a weed edge. The bucktail covers distance fast to locate active pike.' },
+      { s: 'Vary retrieve speed', d: 'Speed up briefly then slow down. The sudden speed change triggers following pike to strike.' },
+      { s: 'Figure eight at the boat', d: 'Pike often follow to the boat without striking. At the end of each retrieve do a figure eight with the rod tip at the side of the boat.' },
+    ],
+    variations: ['Spinnerbait (more weedless)', 'Inline spinner (smaller rivers)', 'Swimbait (slower presentation)', 'Spoon (fluttering action)'],
+    proTip: 'The figure eight boat-side retrieve is not optional for pike. A massive percentage of big pike are caught right at the boat on the figure eight when they follow without committing.',
+  },
+  'Large Swimbait': {
+    icon: '🐟', tag: '🔥 Fall Pike', tagClass: 'tag-hot',
+    best: 'Fall pike feeding frenzy, large trophy pike lakes, matching big baitfish',
+    colors: ['Perch pattern (most waters)', 'Sucker (large trophy lakes)', 'Shad (clear open water)', 'Chartreuse white (stained)'],
+    sizes: ['6 to 10in depending on target size', '1 to 3oz head weight'],
+    rod: '7ft 6in heavy to extra-heavy, moderate action',
+    line: '65lb braid with wire or 80lb fluorocarbon leader',
+    hook: 'Heavy duty screw lock swimbait hook or through-wire rigged',
+    setup: [
+      { s: 'Match the local baitfish', d: 'In fall pike gorge on large perch, suckers, and whitefish. Size your swimbait to match what is actually in the water.' },
+      { s: 'Slow roll near bottom', d: 'Fall pike key on bottom structure. Count the bait down and slow roll it just above the bottom contour.' },
+      { s: 'Work transition zones', d: 'Weed edges dying back in fall, rock to mud transitions, and channel edges hold concentrations of fall pike.' },
+      { s: 'Pause and flutter', d: 'Stop reeling briefly and let the swimbait flutter and sink. Pike often strike on the pause.' },
+    ],
+    variations: ['Paddle tail (standard retrieve)', 'Multi-jointed (slow sink)', 'Glide bait (open water)', 'Soft jerkbait (finesse presentation)'],
+    proTip: 'Fall is the single best time to target trophy pike. They feed aggressively before winter and are less wary than in summer. A large swimbait matching local baitfish is the most consistent big fish producer.',
+  },
+  'Punch Rig': {
+    icon: '🐛', tag: '🔥 Hot pick', tagClass: 'tag-hot',
+    best: 'Summer over thick surface mats, hyacinth, milfoil, and hydrilla',
+    colors: ['Black blue (most common)', 'Green pumpkin (clear water under mats)', 'Junebug (stained)'],
+    sizes: ['1 to 2 oz tungsten weight (must punch through mat)', 'Large creature bait or craw'],
+    rod: '7ft 6in heavy to extra-heavy, fast action',
+    line: '50-65 lb braid -- never fluoro or mono for this technique',
+    hook: '4/0 to 5/0 straight shank heavy wire -- standard EWG will fail',
+    setup: [
+      { s: 'Find the right mat density', d: 'You want thick enough mats to hold bass but thin enough for the weight to punch through.' },
+      { s: 'Punch straight down', d: 'Hold the rod vertical and drop the weight through the mat. Do not cast -- punch.' },
+      { s: 'Shake it in the hole', d: 'Once through, shake the rod tip 3 to 5 times without moving the bait out of the hole.' },
+      { s: 'Rip it out if no bite in 10 seconds', d: 'Move to a new hole. Active bass hit immediately under mats.' },
+    ],
+    variations: ['Flipping jig (less dense cover)', 'Swim jig (mat edges)', 'Texas rig (moderate vegetation)'],
+    proTip: 'Look for gaps, points, and irregular edges in the mat -- bass position under the cover nearest open water for ambushing.',
+  },
+};
+
+  _lureDataReady = true;
+
+function openLureSheet(lureName) {
+  const data = (_LURE_DETAILS || {})[lureName];
+  if (!data) return;
+
+  document.getElementById('sheetIcon').textContent = data.icon;
+  document.getElementById('sheetName').textContent = lureName;
+
+  const tag = document.getElementById('sheetTag');
+  tag.textContent = data.tag;
+  tag.className = 'sheet-tag ' + (data.tagClass === 'tag-hot'
+    ? 'badge-hot' : data.tagClass === 'tag-good' ? 'badge-good' : 'badge-slow');
+
+  const body = document.getElementById('sheetBody');
+  body.innerHTML = `
+    <div class="sheet-section">
+      <div class="sheet-tip">🎯 <strong>Best when:</strong> ${data.best}</div>
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">Gear Setup</div>
+      <div class="sheet-grid">
+        <div class="sheet-cell"><div class="sheet-cell-label">Rod</div><div class="sheet-cell-val">${data.rod}</div></div>
+        <div class="sheet-cell"><div class="sheet-cell-label">Line</div><div class="sheet-cell-val">${data.line}</div></div>
+        <div class="sheet-cell" style="grid-column:1/-1"><div class="sheet-cell-label">Hook / Head</div><div class="sheet-cell-val">${data.hook}</div></div>
+      </div>
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">Colors to Try</div>
+      ${data.colors.map(c => `<span class="variation-chip">${c}</span>`).join('')}
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">Sizes</div>
+      ${data.sizes.map(s => `<span class="variation-chip">${s}</span>`).join('')}
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">How to Fish It</div>
+      ${data.setup.map((step, i) => `
+        <div class="setup-row">
+          <div class="setup-num">${i + 1}</div>
+          <div class="setup-text"><strong>${step.s}.</strong> ${step.d}</div>
+        </div>`).join('')}
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">Variations to Know</div>
+      ${data.variations.map(v => `<span class="variation-chip">${v}</span>`).join('')}
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-tip">💡 <strong>Pro tip:</strong> ${data.proTip}</div>
+    </div>
+  `;
+
+  document.getElementById('lureSheet').classList.add('open');
+  document.getElementById('lureSheetContent').scrollTop = 0;
+}
+
+function closeLureSheet(e) {
+  if (e.target === document.getElementById('lureSheet')) {
+    document.getElementById('lureSheet').classList.remove('open');
+  }
+}
+
+function askStrategy(lureName) {
+  openLureSheet(lureName);
+}
+
+// Start -- init handles cache render + fresh fetch in one flow
+try {
+  init();
+} catch(e) {
+  var d = document.getElementById('debugBar');
+  if (d) { d.style.display='block'; d.textContent = 'INIT ERROR: ' + e.message + ' | stack: ' + (e.stack||'').substring(0,200); }
+}
+</script>
+</body>
+</html>
