@@ -2529,6 +2529,11 @@ function renderAll(wx, moon, waterTemp, placeName) {
   requestNotificationPermission();
   initSwipeHandlers();
   checkForUpdate();
+  // Preload Leaflet and community data in background
+  setTimeout(function() {
+    loadLeaflet(function() {});
+    if (db) loadCommunityData();
+  }, 2000);
 }
 
 function showError(msg) {
@@ -2708,16 +2713,45 @@ function initCommunityMap() {
 }
 
 function loadCommunityData() {
-  if (!db) return;
+  if (!db) {
+    showCommunityEmpty();
+    return;
+  }
   var ref = db.ref('catches');
-  ref.limitToLast(200).on('value', function(snap) {
+  // Set a timeout in case Firebase doesn't respond
+  var loadTimer = setTimeout(function() {
+    showCommunityEmpty();
+  }, 8000);
+
+  ref.limitToLast(200).once('value', function(snap) {
+    clearTimeout(loadTimer);
     var data = snap.val() || {};
     var catches = Object.values(data);
     updateCommunityStats(catches);
     updateCommunityMap(catches);
     updateLeaderboard(catches);
     updateCommunityFeed(catches);
+    // Now set up live listener for updates
+    ref.limitToLast(200).on('value', function(snap2) {
+      var data2 = snap2.val() || {};
+      var catches2 = Object.values(data2);
+      updateCommunityStats(catches2);
+      updateCommunityMap(catches2);
+      updateLeaderboard(catches2);
+      updateCommunityFeed(catches2);
+    });
+  }, function(err) {
+    clearTimeout(loadTimer);
+    showCommunityEmpty();
   });
+}
+
+function showCommunityEmpty() {
+  var lb = document.getElementById('leaderboard');
+  var feed = document.getElementById('communityFeed');
+  if (lb) lb.innerHTML = '<div style="color:var(--text-muted);font-size:14px;text-align:center;padding:20px">No catches yet -- be the first to log one!</div>';
+  if (feed) feed.innerHTML = '<div style="color:var(--text-muted);font-size:14px;text-align:center;padding:20px">Log a catch to see it appear here</div>';
+  updateCommunityStats([]);
 }
 
 function updateCommunityStats(catches) {
@@ -2846,6 +2880,10 @@ function switchPage(name) {
       _communityLoaded = true;
       loadCommunityData();
     }
+    // Refresh map size after tab becomes visible
+    setTimeout(function() {
+      if (_communityMap) _communityMap.invalidateSize();
+    }, 150);
   }
 }
 
