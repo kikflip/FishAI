@@ -338,6 +338,54 @@
     cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
   }
 
+  /* Community catch map */
+  .community-map-wrap {
+    position: relative; width: 100%; height: 340px;
+    border-radius: 16px; overflow: hidden;
+    background: var(--surface); margin-bottom: 16px;
+  }
+  .community-stats {
+    display: flex; gap: 12px; margin-bottom: 16px;
+  }
+  .comm-stat {
+    flex: 1; background: var(--surface); border-radius: 12px;
+    padding: 14px; text-align: center;
+  }
+  .comm-stat-num { font-size: 28px; font-weight: 700; color: var(--green-bright); }
+  .comm-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .leaderboard { background: var(--surface); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .leader-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .leader-row:last-child { border-bottom: none; }
+  .leader-rank { font-size: 18px; width: 28px; text-align: center; }
+  .leader-name { flex: 1; font-weight: 500; }
+  .leader-count { color: var(--green-bright); font-weight: 700; }
+  .leader-species { font-size: 12px; color: var(--text-muted); }
+  .community-feed { background: var(--surface); border-radius: 12px; padding: 16px; }
+  .feed-item {
+    display: flex; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-icon { font-size: 24px; flex-shrink: 0; }
+  .feed-body { flex: 1; }
+  .feed-title { font-size: 14px; font-weight: 600; }
+  .feed-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .feed-time { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .nickname-setup {
+    background: var(--surface); border-radius: 12px;
+    padding: 20px; margin-bottom: 16px; text-align: center;
+  }
+  .nickname-setup input {
+    width: 100%; padding: 12px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg);
+    color: var(--text); font-size: 15px; margin: 12px 0;
+    text-align: center;
+  }
+
   /* Error */
   .error-bar {
     background: var(--coral-pale); color: var(--coral-dark);
@@ -585,6 +633,22 @@
   .popup-weight { font-size: 15px; font-weight: 700; color: #0a3d2b; margin-bottom: 3px; }
   .popup-meta { color: #5F5E5A; font-size: 12px; line-height: 1.6; }
 </style>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+  var firebaseConfig = {
+    apiKey: "AIzaSyAwTXMdZBlHYIiSCjtiHQOVh4cxdjt6zsI",
+    authDomain: "fishai-f1584.firebaseapp.com",
+    databaseURL: "https://fishai-f1584-default-rtdb.firebaseio.com",
+    projectId: "fishai-f1584",
+    storageBucket: "fishai-f1584.firebasestorage.app",
+    messagingSenderId: "1081945458274",
+    appId: "1:1081945458274:web:0a9ded20a72098c756733b"
+  };
+  firebase.initializeApp(firebaseConfig);
+  var db = firebase.database();
+</script>
 </head>
 <body>
 
@@ -1030,6 +1094,39 @@
   <div class="nav-item" onclick="switchPage('Map')" id="navMap">
     <div class="nav-ico">🗺️</div><div class="nav-lbl">Map</div>
   </div>
+  <div class="nav-item" onclick="switchPage('Community')" id="navCommunity">
+    <div class="nav-ico">🌐</div><div class="nav-lbl">Community</div>
+  </div>
+</div>
+
+<div class="page" id="pageCommunity">
+  <div class="app-header">
+    <div class="header-top">
+      <div>
+        <div class="app-title">Community</div>
+        <div class="app-subtitle" id="commSub">Live catch map</div>
+      </div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="nickname-setup" id="nicknameSetup" style="display:none">
+      <div style="font-size:15px;font-weight:600;margin-bottom:4px">Set your angler name</div>
+      <div style="font-size:13px;color:var(--text-muted)">Shows on the community map when you log catches</div>
+      <input type="text" id="nicknameInput" placeholder="e.g. LakeFox, BassHunter..." maxlength="20" style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;margin:12px 0;text-align:center"/>
+      <button class="btn-primary" onclick="saveNickname()">Save Name</button>
+    </div>
+    <div class="community-stats">
+      <div class="comm-stat"><div class="comm-stat-num" id="commTotalCatches">--</div><div class="comm-stat-label">Total Catches</div></div>
+      <div class="comm-stat"><div class="comm-stat-num" id="commActiveAnglers">--</div><div class="comm-stat-label">Anglers</div></div>
+      <div class="comm-stat"><div class="comm-stat-num" id="commTodayCatches">--</div><div class="comm-stat-label">Today</div></div>
+    </div>
+    <div class="section-title">Catch Map</div>
+    <div class="community-map-wrap"><div id="communityMap" style="width:100%;height:100%"></div></div>
+    <div class="section-title">Top Anglers This Week</div>
+    <div class="leaderboard" id="leaderboard"><div style="color:var(--text-muted);font-size:14px;text-align:center;padding:20px">Loading...</div></div>
+    <div class="section-title">Recent Catches</div>
+    <div class="community-feed" id="communityFeed"><div style="color:var(--text-muted);font-size:14px;text-align:center;padding:20px">Loading...</div></div>
+  </div>
 </div>
 
 <!-- Log Modal -->
@@ -1054,7 +1151,7 @@
 <script>
 // ── App version ───────────────────────────────────────────────────────────
 var APP_VERSION = '1.0.0';
-var VERSION_CHECK_URL = 'https://raw.githubusercontent.com/kikflip/FishAI/main/version.json';
+var VERSION_CHECK_URL = 'https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/main/version.json';
 
 // ── Global error catcher -- shows any crash visibly on screen ───────────────
 window.onerror = function(msg, src, line) {
@@ -1793,7 +1890,10 @@ function saveCatch() {
   const notes = document.getElementById('catchNotes').value;
   const now = new Date();
   const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  catches.push({ weight, length, lure, notes, date, lat, lon });
+  var newCatch = { weight: weight, length: length, lure: lure, notes: notes, date: date, lat: lat, lon: lon, species: currentSpecies };
+  catches.push(newCatch);
+  // Share to community map if user has a nickname
+  if (getNickname()) shareCatchToFirebase(newCatch);
   localStorage.setItem('fishAICatches', JSON.stringify(catches));
   closeLogModal();
   renderCatches();
@@ -2553,6 +2653,180 @@ function dismissUpdate() {
   if (banner) banner.classList.remove('show');
 }
 
+// ── Community catch map ───────────────────────────────────────────────────
+var _communityMap = null;
+var _communityMarkers = [];
+var _userNickname = null;
+var _communityLoaded = false;
+
+function getNickname() {
+  if (_userNickname) return _userNickname;
+  try { _userNickname = localStorage.getItem('fishAINickname'); } catch(e) {}
+  return _userNickname;
+}
+
+function saveNickname() {
+  var input = document.getElementById('nicknameInput');
+  if (!input || !input.value.trim()) return;
+  _userNickname = input.value.trim();
+  try { localStorage.setItem('fishAINickname', _userNickname); } catch(e) {}
+  document.getElementById('nicknameSetup').style.display = 'none';
+  loadCommunityData();
+}
+
+function timeAgo(ts) {
+  var diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+
+function speciesIcon(sp) {
+  if (!sp) return '🐟';
+  var s = sp.toLowerCase();
+  if (s.includes('small')) return '🎣';
+  if (s.includes('pike')) return '🦈';
+  return '🐟';
+}
+
+function initCommunityMap() {
+  if (_communityMap) return;
+  var mapEl = document.getElementById('communityMap');
+  if (!mapEl) return;
+  // Load Leaflet first if not already loaded
+  loadLeaflet(function() {
+    if (_communityMap) return;
+    var startLat = lat || 41.674;
+    var startLon = lon || -88.002;
+    _communityMap = L.map('communityMap', { zoomControl: true }).setView([startLat, startLon], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(_communityMap);
+    setTimeout(function() { _communityMap.invalidateSize(); }, 200);
+  });
+}
+
+function loadCommunityData() {
+  if (!db) return;
+  var ref = db.ref('catches');
+  ref.limitToLast(200).on('value', function(snap) {
+    var data = snap.val() || {};
+    var catches = Object.values(data);
+    updateCommunityStats(catches);
+    updateCommunityMap(catches);
+    updateLeaderboard(catches);
+    updateCommunityFeed(catches);
+  });
+}
+
+function updateCommunityStats(catches) {
+  var today = new Date().toDateString();
+  var todayCount = catches.filter(function(c) {
+    return new Date(c.ts).toDateString() === today;
+  }).length;
+  var anglers = new Set(catches.map(function(c) { return c.nickname; })).size;
+  var tc = document.getElementById('commTotalCatches');
+  var aa = document.getElementById('commActiveAnglers');
+  var tdc = document.getElementById('commTodayCatches');
+  if (tc) tc.textContent = catches.length;
+  if (aa) aa.textContent = anglers;
+  if (tdc) tdc.textContent = todayCount;
+  var sub = document.getElementById('commSub');
+  if (sub) sub.textContent = catches.length + ' catches from ' + anglers + ' anglers';
+}
+
+function updateCommunityMap(catches) {
+  if (!_communityMap) return;
+  _communityMarkers.forEach(function(m) { m.remove(); });
+  _communityMarkers = [];
+  catches.forEach(function(c) {
+    if (!c.lat || !c.lon) return;
+    var icon = L.divIcon({
+      className: '',
+      html: '<div style="font-size:20px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5))">' + speciesIcon(c.species) + '</div>',
+      iconSize: [24, 24], iconAnchor: [12, 12]
+    });
+    var marker = L.marker([c.lat, c.lon], { icon: icon });
+    var popup = '<strong>' + (c.nickname || 'Angler') + '</strong><br>' +
+      (c.species || 'Bass') + ' -- ' + (c.lure || 'Unknown lure') + '<br>' +
+      (c.weight ? c.weight + ' lbs' : '') +
+      (c.notes ? '<br><em>' + c.notes + '</em>' : '') +
+      '<br><small>' + timeAgo(c.ts) + '</small>';
+    marker.bindPopup(popup);
+    marker.addTo(_communityMap);
+    _communityMarkers.push(marker);
+  });
+}
+
+function updateLeaderboard(catches) {
+  var el = document.getElementById('leaderboard');
+  if (!el) return;
+  var weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  var weekCatches = catches.filter(function(c) { return c.ts > weekAgo; });
+  var counts = {};
+  var species = {};
+  weekCatches.forEach(function(c) {
+    var name = c.nickname || 'Anonymous';
+    counts[name] = (counts[name] || 0) + 1;
+    if (!species[name]) species[name] = {};
+    species[name][c.species || 'Bass'] = (species[name][c.species || 'Bass'] || 0) + 1;
+  });
+  var sorted = Object.keys(counts).sort(function(a,b) { return counts[b]-counts[a]; }).slice(0,5);
+  var medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+  if (sorted.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:14px;text-align:center;padding:20px">No catches this week yet -- be the first!</div>';
+    return;
+  }
+  el.innerHTML = sorted.map(function(name, i) {
+    var topSp = Object.keys(species[name]).sort(function(a,b) { return species[name][b]-species[name][a]; })[0];
+    return '<div class="leader-row">' +
+      '<span class="leader-rank">' + medals[i] + '</span>' +
+      '<span class="leader-name">' + name + '</span>' +
+      '<span class="leader-species">' + speciesIcon(topSp) + '</span>' +
+      '<span class="leader-count">' + counts[name] + ' catches</span>' +
+      '</div>';
+  }).join('');
+}
+
+function updateCommunityFeed(catches) {
+  var el = document.getElementById('communityFeed');
+  if (!el) return;
+  var sorted = catches.slice().sort(function(a,b) { return b.ts - a.ts; }).slice(0, 15);
+  if (sorted.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:14px;text-align:center;padding:20px">No catches logged yet</div>';
+    return;
+  }
+  el.innerHTML = sorted.map(function(c) {
+    return '<div class="feed-item">' +
+      '<span class="feed-icon">' + speciesIcon(c.species) + '</span>' +
+      '<div class="feed-body">' +
+        '<div class="feed-title">' + (c.nickname || 'Angler') + ' caught a ' + (c.species || 'Bass') + '</div>' +
+        '<div class="feed-sub">' + (c.lure || 'Unknown lure') +
+          (c.weight ? ' -- ' + c.weight + ' lbs' : '') + '</div>' +
+        '<div class="feed-time">' + timeAgo(c.ts) + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function shareCatchToFirebase(catchObj) {
+  if (!db) return;
+  var nick = getNickname();
+  if (!nick) return;
+  var entry = {
+    nickname: nick,
+    species: catchObj.species || currentSpecies || 'largemouth',
+    lure: catchObj.lure || '',
+    weight: catchObj.weight || '',
+    notes: catchObj.notes || '',
+    lat: catchObj.lat || lat || null,
+    lon: catchObj.lon || lon || null,
+    ts: Date.now()
+  };
+  db.ref('catches').push(entry);
+}
+
 // ── Page navigation ───────────────────────────────────────────────────────
 function switchPage(name) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
@@ -2563,6 +2837,16 @@ function switchPage(name) {
   if (nav) nav.classList.add('active');
   if (name === 'Log') renderCatches();
   if (name === 'Map') renderMap();
+  if (name === 'Community') {
+    initCommunityMap();
+    if (!getNickname()) {
+      document.getElementById('nicknameSetup').style.display = 'block';
+    }
+    if (!_communityLoaded) {
+      _communityLoaded = true;
+      loadCommunityData();
+    }
+  }
 }
 
 // ── Hot bite notification system ───────────────────────────────────────────
