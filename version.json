@@ -1,6 +1,6 @@
 {
-  "version": "1.0.18",
+  "version": "1.0.19",
   "download_url": "https://drive.google.com/uc?export=download&id=1ho-WnUkVMsi8-DMmHCjJ9UOb1_8yDo52",
-  "notes": "fix update bug",
-  "released": "2026-04-29T20:38:05.993863"
+  "notes": "updater fix, ui upgrades",
+  "released": "2026-04-30T10:24:04.299285"
 }
