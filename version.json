@@ -1,6 +1,6 @@
 {
-  "version": "1.0.37",
+  "version": "1.0.38",
   "download_url": "https://drive.google.com/uc?export=download&id=1ho-WnUkVMsi8-DMmHCjJ9UOb1_8yDo52",
-  "notes": "Release 1.0.37 - 2026-05-01",
-  "released": "2026-05-01T18:47:19.102860"
+  "notes": "Improved lure recommendations based on water temp, depth, wind and sky conditions",
+  "released": "2026-05-01T18:53:27.429039"
 }
