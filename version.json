@@ -1,6 +1,6 @@
 {
-  "version": "1.0.76",
+  "version": "1.0.77",
   "download_url": "https://drive.google.com/uc?export=download&id=1ho-WnUkVMsi8-DMmHCjJ9UOb1_8yDo52",
-  "notes": "fix catch load pic",
-  "released": "2026-05-13T11:00:33.050810"
+  "notes": "bug fix",
+  "released": "2026-05-13T15:45:38.980757"
 }
