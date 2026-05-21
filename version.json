@@ -1,6 +1,6 @@
 {
-  "version": "1.0.82",
+  "version": "1.0.83",
   "download_url": "https://drive.google.com/uc?export=download&confirm=t&id=1ho-WnUkVMsi8-DMmHCjJ9UOb1_8yDo52",
-  "notes": "fix update bug",
-  "released": "2026-05-21T14:51:30.885319"
+  "notes": "fix crash",
+  "released": "2026-05-21T16:24:19.371237"
 }
